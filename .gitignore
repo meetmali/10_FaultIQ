@@ -1,0 +1,69 @@
+# --- Secrets / local config ---
+.env
+.env.*
+!.env.example
+!.env.prod.example
+
+# --- Data (never commit raw or derived datasets) ---
+data/raw/*
+data/interim/*
+data/processed/*
+data/uploads/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+# data/sample/ is tracked: synthetic or sanitized examples only
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.zip
+*.tar.gz
+
+# --- Model artifacts (versioned outside Git) ---
+models/
+*.joblib
+*.pkl
+*.onnx
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- .NET ---
+**/bin/
+**/obj/
+*.user
+TestResults/
+
+# --- Node / frontend ---
+node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+
+# --- OS / editors ---
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# --- Logs ---
+*.log

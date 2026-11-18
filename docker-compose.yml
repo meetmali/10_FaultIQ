@@ -1,0 +1,80 @@
+# FaultIQ local development environment (ADR 0007: .NET API + Python worker).
+# Usage:  cp .env.example .env && docker compose up --build
+# Production and the public demo use compose.prod.yml instead (see docs/deployment.md).
+
+name: faultiq
+
+x-db-env: &db-env
+  POSTGRES_USER: ${POSTGRES_USER:?set in .env}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+  POSTGRES_DB: ${POSTGRES_DB:?set in .env}
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    environment: *db-env
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__FaultIQ: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Cors__Origins: ${CORS_ORIGINS:-http://localhost:5173}
+      Uploads__Directory: /app/data/uploads
+      Uploads__MaxSizeMb: ${MAX_UPLOAD_SIZE_MB:-100}
+    volumes:
+      - uploads:/app/data/uploads
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # The chiseled image has no shell or curl, so no container HEALTHCHECK.
+    # Use GET /api/v1/health/ready from the host.
+
+  worker:
+    build:
+      context: ./pipeline
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      UPLOAD_DIR: /app/data/uploads
+    volumes:
+      - uploads:/app/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "worker", "--check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      # Vite proxies /api to the API container, so the browser always uses the same origin.
+      API_PROXY_TARGET: http://api:8080
+    volumes:
+      - ./frontend/src:/app/src
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  uploads:

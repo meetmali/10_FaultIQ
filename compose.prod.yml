@@ -1,0 +1,100 @@
+# FaultIQ production deployment: the public demo and self-hosting both use this file (ADR 0017).
+#
+#   cp .env.prod.example .env.prod      # then edit SITE_ADDRESS and POSTGRES_PASSWORD
+#   docker compose -f compose.prod.yml --env-file .env.prod pull      # prebuilt images from GHCR
+#   docker compose -f compose.prod.yml --env-file .env.prod up -d
+#
+# To build from source instead of pulling, add --build to "up".
+# Only the web container (Caddy) is exposed. The API, worker and database stay on the internal network.
+
+name: faultiq
+
+# Shared by every service: restart after crashes or reboots, and cap log files so a small server's disk can't fill.
+x-defaults: &defaults
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    <<: *defaults
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set in .env.prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env.prod}
+      POSTGRES_DB: ${POSTGRES_DB:?set in .env.prod}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    image: ghcr.io/${GHCR_OWNER:-meetmali}/faultiq-api:${FAULTIQ_VERSION:-latest}
+    build:
+      context: ./api
+    <<: *defaults
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__FaultIQ: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Demo__Enabled: ${DEMO_MODE:-false}
+      ReverseProxy__Enabled: "true"
+      RateLimiting__PermitPerMinute: ${RATE_LIMIT_PER_MINUTE:-300}
+      Cors__Origins: ""
+      Uploads__Directory: /app/data/uploads
+      Uploads__MaxSizeMb: ${MAX_UPLOAD_SIZE_MB:-100}
+    volumes:
+      - uploads:/app/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    image: ghcr.io/${GHCR_OWNER:-meetmali}/faultiq-worker:${FAULTIQ_VERSION:-latest}
+    build:
+      context: ./pipeline
+    <<: *defaults
+    environment:
+      APP_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      UPLOAD_DIR: /app/data/uploads
+    volumes:
+      - uploads:/app/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "worker", "--check"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  web:
+    image: ghcr.io/${GHCR_OWNER:-meetmali}/faultiq-web:${FAULTIQ_VERSION:-latest}
+    build:
+      context: ./frontend
+      target: web
+    <<: *defaults
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:

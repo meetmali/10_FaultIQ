@@ -5,8 +5,10 @@
 > **Mission:** Detect abnormal HVAC operating behavior, diagnose
 > supported known fault types, and show the evidence behind each result.
 
-FaultIQ is an individual project focused on **HVAC Fault Detection and
-Diagnostics (FDD)**. The MVP will begin with historical, labeled Rooftop
+FaultIQ is a **pro bono, open-source (MIT)** project focused on **HVAC
+Fault Detection and Diagnostics (FDD)**. It is free to use and
+self-host, for building owners who can't afford commercial FDD tools
+(ADR 0014). The MVP will begin with historical, labeled Rooftop
 Unit (RTU) data and a web dashboard. This README is the project
 execution plan: work through the phases in order, produce the listed
 deliverables, and do not add complexity before the core workflow is
@@ -178,41 +180,79 @@ units, sampling rates, or label encoding.
   -----------------------------------------------------------------------
   Layer                   Technology              Responsibility
   ----------------------- ----------------------- -----------------------
-  Data processing         Python, Pandas, NumPy   Ingestion, cleaning,
-                                                  feature engineering
+  Data processing         Python, Polars,         Ingestion, cleaning,
+                          PyArrow, NumPy          feature engineering
+                                                  (ADR 0010)
+
+  Ad-hoc analytics        DuckDB over Parquet     EDA, evaluation
+                                                  reports, bounded chart
+                                                  slices (ADR 0010)
 
   ML                      scikit-learn            Baselines, anomaly
-                                                  detection,
-                                                  classification,
-                                                  evaluation
+                                                  detection, leakage-aware
+                                                  splits, calibration,
+                                                  evaluation (ADR 0011)
 
-  Optional ML             XGBoost                 Candidate model only if
-                                                  validation shows
-                                                  improvement
+  Boosted model           LightGBM                Candidate model only if
+                                                  held-out validation
+                                                  shows improvement
 
-  API                     FastAPI, Pydantic       Typed REST endpoints
-                                                  and validation
+  Model explanations      SHAP                    Per-prediction feature
+                                                  attributions (model
+                                                  evidence, not root cause)
+
+  API                     ASP.NET Core (.NET 10   Typed REST endpoints,
+                          LTS, C#), EF Core       uploads, jobs,
+                                                  persistence (ADR 0007)
+
+  Pipeline worker         Python                  Runs ingestion,
+                                                  detection and diagnosis
+                                                  jobs claimed from
+                                                  PostgreSQL
 
   Database                PostgreSQL              Equipment, ingestion,
                                                   event, and analysis
                                                   records
 
-  Time-series extension   TimescaleDB (optional)  Only if query
-                                                  requirements justify it
+  Processed data          Parquet files           Validated data, features,
+                                                  downsampled chart series
 
-  Frontend                React, TypeScript       Application screens and
-                                                  interactions
+  Time-series extension   TimescaleDB (optional)  Only if measured query
+                                                  needs justify it
 
-  Visualization           Plotly                  Sensor trends and
-                                                  evaluation charts
+  Frontend                React, TypeScript,      Application screens and
+                          Vite, React Router      interactions
 
-  Styling                 Tailwind CSS or         Reusable UI
-                          consistent component    
-                          library                 
+  Server state            TanStack Query          Caching, background
+                                                  refresh, loading/error/
+                                                  stale states (ADR 0008)
 
-  Testing                 pytest, Vitest, React   Unit through end-to-end
-                          Testing Library,        tests
-                          Playwright              
+  API client              openapi-typescript      Types generated from the
+                                                  .NET OpenAPI document
+
+  Visualization           Apache ECharts          Sensor trends and
+                                                  evaluation charts from
+                                                  precomputed downsampled
+                                                  series (ADR 0009)
+
+  Styling                 Tailwind CSS +          Accessible reusable UI
+                          shadcn/ui               components
+
+  Observability           OpenTelemetry           Traces, metrics and logs
+                                                  across API and worker
+                                                  (ADR 0012)
+
+  Authentication          ASP.NET Core Identity   Local accounts by
+                          + optional OIDC         default; any OIDC
+                                                  provider by config
+                                                  (ADR 0015)
+
+  File storage            Local disk, optional    Behind a storage
+                          S3-compatible           interface (ADR 0015)
+
+  Testing                 pytest, xUnit, Vitest,  Unit through end-to-end
+                          React Testing Library,  tests
+                          Playwright
 
   Packaging               Docker, Docker Compose  Reproducible
                                                   environments
@@ -220,10 +260,20 @@ units, sampling rates, or label encoding.
   Version control         Git                     Source control
   -----------------------------------------------------------------------
 
+Every component is free and permissively licensed, and every external
+service is optional and self-hostable (ADR 0014). Deliberately not used
+in the MVP: Kafka, Redis, Kubernetes, additional microservices, deep
+learning (ADR 0013).
+
 ### Engineering choices
 
--   Start with a **modular monolith**, not microservices.
--   Keep data processing and model inference in reusable Python modules.
+-   Keep the deployable units few: a **.NET API**, a **Python worker**,
+    PostgreSQL and the frontend. No further microservices (ADR 0007).
+-   Keep data processing, feature engineering and model inference only in
+    reusable Python modules. The .NET API never computes features or
+    predictions; it creates jobs and serves results.
+-   PostgreSQL is the integration point between the API and the worker
+    (job table claimed with `SELECT ... FOR UPDATE SKIP LOCKED`).
 -   Use PostgreSQL for application records; retain source CSVs in
     file/object storage rather than forcing every raw sample into
     relational tables.
@@ -265,17 +315,23 @@ LBNL RTU CSV / Historical HVAC Data
        - model and pipeline version
        - diagnostic explanation
                  |
-          +------+------+
-          |             |
-          v             v
-       FastAPI       PostgreSQL
-          |
-          v
+                 |
+                 v
+     PostgreSQL (jobs, results, evidence)
+                 ^
+                 |
+     ASP.NET Core API (.NET, /api/v1)
+                 |
+                 v
     React + TypeScript
     - Dashboard
     - Fault Diagnostics
     - Fault Library
 ```
+
+Everything from ingestion through results runs in the **Python worker**
+(`pipeline/`). The **ASP.NET Core API** (`api/`) handles uploads, creates
+analysis jobs, and serves persisted results to the frontend (ADR 0007).
 
 ### Architecture rules
 
@@ -379,7 +435,8 @@ repository, README, issue board, and development conventions. - Pin
 Python and Node versions; create dependency lock files. - Add
 `.env.example`, `.gitignore`, and basic Docker Compose configuration. -
 Record major architecture choices as short Architecture Decision
-Records.
+Records. - Add open-source governance: `LICENSE` (MIT),
+`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`.
 
 Deliverables: approved scope, repository skeleton, local setup
 instructions, initial architecture diagram.
@@ -408,7 +465,11 @@ meaning and the files load reproducibly.
 
 **Objective:** Convert source files into validated analysis inputs.
 
-Tasks: - Implement CSV import and schema validation. - Validate
+Tasks: - Implement CSV import and schema validation. - Add a
+point-mapping step that maps a user's column names (for example SAT,
+DA-T, SupplyAirTemp) to standard sensor roles, informed by Brick and
+Project Haystack conventions, and save mappings per equipment so they
+can be reused (ADR 0014). - Validate
 timestamps, numeric fields, units, and labels. - Define duplicate,
 missing-value, and irregular-sampling handling. - Build reusable
 preprocessing and feature-engineering modules. - Add structured logs and
@@ -443,8 +504,9 @@ detected interval.
 
 Tasks: - Define the fault taxonomy from actual dataset labels. -
 Establish a simple supervised baseline. - Evaluate candidate models such
-as Random Forest or Gradient Boosting; consider XGBoost only if
-justified. - Report macro-F1 and per-class precision/recall, not
+as Random Forest or LightGBM; adopt LightGBM only if it beats the
+baseline on held-out macro-F1. - Attach SHAP attributions as model
+evidence. - Report macro-F1 and per-class precision/recall, not
 accuracy alone. - Inspect confusion between similar fault types. - Add
 an unknown/inconclusive outcome for weak evidence or unsupported
 conditions. - Calibrate probabilities before presenting them as
@@ -490,12 +552,18 @@ handled explicitly.
 **Objective:** Expose ingestion and diagnostics through stable
 interfaces.
 
-Tasks: - Build a versioned FastAPI application. - Define Pydantic
-request/response schemas. - Add PostgreSQL models and migrations. -
-Track uploads and ingestion jobs. - Persist equipment, fault events,
+Tasks: - Build a versioned ASP.NET Core API. - Define typed C#
+request/response contracts. - Add EF Core models and migrations (the
+single schema owner). - Implement the job table and the Python worker's
+claim/complete loop, with a contract test between the two. - Track
+uploads and ingestion jobs. - Persist equipment, fault events,
 analyses, evidence, and model versions. - Use background jobs for
 long-running processing. - Add pagination, filtering, safe errors, and
-API tests.
+API tests. - Have the worker precompute downsampled chart series
+(ADR 0009). - Generate the TypeScript API client from the OpenAPI
+document (ADR 0008). - Instrument the API and worker with
+OpenTelemetry, propagating trace context through the job table
+(ADR 0012).
 
 Deliverables: documented API, database migrations, integration tests,
 OpenAPI documentation.
@@ -552,10 +620,15 @@ Configure production environment variables and secrets. - Use managed
 PostgreSQL or a backed-up database. - Configure HTTPS, CORS, upload
 limits, and access controls. - Test database backup and restore. - Add
 health/readiness checks and error monitoring. - Document deployment,
-rollback, and recovery. - Tag a release and maintain a changelog.
+rollback, and recovery. - Tag a release and maintain a changelog. -
+Write a self-hosting guide (single machine, `docker compose up`, TLS,
+backups). - Publish a public demo that uses sample data only and
+rejects real uploads, using the same `compose.prod.yml` with
+`DEMO_MODE=true` (ADR 0017). - Add a CI dependency-licence check.
 
-Deliverables: deployed MVP, deployment runbook, backup/restore
-instructions, versioned release.
+Deliverables: self-hostable release, public sample-data demo,
+deployment and self-hosting runbook, backup/restore instructions,
+versioned release.
 
 **Exit criteria:** Deployment is reproducible from documented
 configuration and recovery from backup has been tested.
@@ -792,7 +865,7 @@ data.
 ### Development environment
 
 Use Docker Compose for a repeatable local environment: - `frontend` -
-`api` - `postgres` - Optional `worker` for background processing
+`api` (.NET) - `worker` (Python pipeline) - `postgres`
 
 ### Production-minded checklist
 
@@ -836,16 +909,20 @@ faultiq/
 │   ├── 01_dataset_exploration.ipynb
 │   ├── 02_data_quality.ipynb
 │   └── 03_model_baselines.ipynb
-├── backend/
+├── api/                     # ASP.NET Core, .NET 10 LTS (ADR 0007)
+│   ├── FaultIQ.slnx
+│   ├── global.json
+│   ├── Directory.Build.props
+│   ├── Directory.Packages.props
+│   ├── src/FaultIQ.Api/
+│   │   ├── Program.cs
+│   │   ├── Health/
+│   │   ├── Ingestions/          # Phase 6
+│   │   ├── Diagnostics/         # Phase 6
+│   │   └── Data/                # EF Core context + migrations (Phase 6)
+│   └── tests/FaultIQ.Api.Tests/
+├── pipeline/                # Python 3.13: data, ML, worker
 │   ├── pyproject.toml
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── api/
-│   │   ├── core/
-│   │   ├── db/
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   └── workers/
 │   ├── faultiq/
 │   │   ├── ingestion/
 │   │   ├── validation/
@@ -854,6 +931,7 @@ faultiq/
 │   │   ├── detection/
 │   │   ├── diagnosis/
 │   │   └── evaluation/
+│   ├── worker/
 │   └── tests/
 ├── frontend/
 │   ├── package.json
@@ -880,6 +958,7 @@ tested Python modules.
 ### Prerequisites
 
 -   Git
+-   .NET SDK pinned by `api/global.json`
 -   Python version pinned by the project
 -   Node.js LTS version pinned by the project
 -   Docker and Docker Compose
@@ -898,16 +977,9 @@ Add the exact backend/frontend install and test commands once the
 package managers and dependency files are selected. Do not document
 commands that the repository does not yet implement.
 
-Example `.env.example`:
-
-``` dotenv
-APP_ENV=development
-API_V1_PREFIX=/api/v1
-DATABASE_URL=postgresql+psycopg://faultiq:change-me@postgres:5432/faultiq
-UPLOAD_DIR=/app/data/uploads
-MAX_UPLOAD_SIZE_MB=100
-CORS_ORIGINS=http://localhost:5173
-```
+See `.env.example` in the repository root. Docker Compose builds the API's
+Npgsql connection string and the worker's `DATABASE_URL` from the
+`POSTGRES_*` values.
 
 Use local-only credentials for development. Never commit `.env`.
 
@@ -1004,6 +1076,8 @@ workflow is validated:
 -   Human feedback workflows for confirmed fault labels.
 -   Model monitoring and controlled retraining.
 -   More advanced agent orchestration for bounded investigation.
+-   A free hosted service (needs its own ADR covering cost, data custody,
+    security and abuse protection).
 -   Cloud deployment and managed storage.
 
 Any extension must preserve the current product boundary: detecting and
@@ -1015,10 +1089,13 @@ unless the project scope is deliberately changed.
 1.  Lawrence Berkeley National Laboratory, **Rooftop Unit (RTU) Fault
     Detection Dataset**: https://faultdetection.lbl.gov/dataset/rtu/
 2.  scikit-learn documentation: https://scikit-learn.org/
-3.  FastAPI documentation: https://fastapi.tiangolo.com/
+3.  ASP.NET Core documentation: https://learn.microsoft.com/aspnet/core/
 4.  PostgreSQL documentation: https://www.postgresql.org/docs/
 5.  React documentation: https://react.dev/
-6.  Plotly documentation: https://plotly.com/
+6.  Apache ECharts documentation: https://echarts.apache.org/
+7.  Polars documentation: https://docs.pola.rs/
+8.  LightGBM documentation: https://lightgbm.readthedocs.io/
+9.  OpenTelemetry documentation: https://opentelemetry.io/docs/
 
 ------------------------------------------------------------------------
 

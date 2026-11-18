@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FaultIQ.Api/FaultIQ.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FaultIQ.Api.Tests/FaultIQ.Api.Tests.csproj" />
+  </Folder>
+</Solution>
