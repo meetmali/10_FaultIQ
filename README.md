@@ -124,9 +124,12 @@ the [Code of Conduct](CODE_OF_CONDUCT.md) and the [security policy](SECURITY.md)
 
 ## Dataset
 
-The MVP uses the [LBNL Rooftop Unit Fault Detection Dataset](https://faultdetection.lbl.gov/dataset/rtu/).
-Download it separately into `data/raw/`. **Never commit it.** Attribution and usage terms
-will be recorded in `docs/dataset-card.md` during Phase 1.
+The MVP uses the [LBNL Rooftop Unit Fault Detection Dataset](https://faultdetection.lbl.gov/dataset/rtu/):
+simulated, experimental and field RTU data at 1-minute resolution. Download it after the free registration
+on that page, and unzip it into `data/raw/`. **Never commit it.** See the [dataset card](docs/dataset-card.md)
+and [data dictionary](docs/data-dictionary.md).
+
+Citation: Lawrence Berkeley National Laboratory, LBNL FDD Data Sets. DOI: https://dx.doi.org/10.25984/1881324
 
 ## Known issues (Phase 0)
 

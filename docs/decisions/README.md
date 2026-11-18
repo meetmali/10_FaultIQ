@@ -22,5 +22,6 @@ When a decision changes, write a new ADR that supersedes the old one. Don't rewr
 | [0015](0015-mainstream-free-stack-resolutions.md) | Mainstream, free choices for the remaining open questions | Accepted |
 | [0016](0016-corrections-to-chart-zoom-and-shap.md) | Corrections: chart zoom without DuckDB in the API, and SHAP from LightGBM | Accepted |
 | [0017](0017-deployable-demo-same-artifacts-as-self-hosting.md) | A deployable demo that uses the same artifacts as self-hosting | Accepted |
+| [0018](0018-dataset-roles-and-dual-point-reporting.md) | Dataset roles and dual reporting (all points and basic points) | Accepted |
 
 Template: copy [`template.md`](template.md).
