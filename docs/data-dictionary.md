@@ -10,6 +10,10 @@
 
 ## Canonical sensor roles
 
+Since Phase 2 the **mapping files are the source of truth**: `pipeline/faultiq/ingestion/mappings/lbnl_*.toml` for the LBNL datasets, and one TOML file per unit for
+user exports ([ADR 0019](decisions/0019-point-mappings-as-toml-with-suggestions.md)). The tables below
+explain them. Processed outputs are described in [processed-data.md](processed-data.md).
+
 The pipeline works with **canonical roles**, not source column names. Each dataset (and later each
 user's BAS export, through the Phase 2 point-mapping step) maps its columns onto these roles.
 Canonical units are SI. The original unit is kept in the per-file metadata.
@@ -32,6 +36,8 @@ Canonical units are SI. The original unit is kept in the per-file metadata.
 | `refg_disc_temp`, `refg_suct_temp`, `refg_cond_temp` | Refrigerant line temperatures | °C | No |
 | `refg_disc_pres`, `refg_suct_pres`, `refg_cond_pres` | Refrigerant pressures | kPa | No |
 | `power_total`, `power_comp`, `power_fan` | Electrical power | W | No |
+| `power_hvac`, `power_vav` | Whole-system and VAV box power (experimental set) | W | No |
+| `vav_sat` | VAV box discharge air temperature, per room | °C | No |
 | `cap_sensible`, `cap_total` | Cooling capacity | W | No |
 | `gas_flow` | Natural gas consumption rate | SCFM (kept as is) | No |
 
@@ -99,14 +105,14 @@ Notes from the files:
 | `RTU_GAS_CSUM` | `gas_flow` | SCFM | Natural gas consumption |
 | `TERM_RM_TEMP_HSPT` | `zone_heat_sp` | °F | Zone heating setpoint (shared by all rooms) |
 | `TERM_RM_TEMP_CSPT` | `zone_cool_sp` | °F | Zone cooling setpoint (shared by all rooms) |
-| `TERM_RM_TEMP_<room>` | `zone_temp` per room | °F | Room temperature, 10 rooms |
-| `TERM_RM_HUMD_<room>` | `zone_rh` per room | % | Room relative humidity, 10 rooms |
-| `HVAC_TOT_WATT` | (system power) | W | RTU plus VAV reheat power |
+| `TERM_RM_TEMP_<room>` | `zone_temp_<room>` | °F | Room temperature, 10 rooms |
+| `TERM_RM_HUMD_<room>` | `zone_rh_<room>` | % | Room relative humidity, 10 rooms |
+| `HVAC_TOT_WATT` | `power_hvac` | W | RTU plus VAV reheat power |
 | `OCCU_MOD` | `occupied` | 0/1 | Occupied mode (07:00 to 22:00) |
 | `RTU_COMP_WATT_1`, `RTU_COMP_WATT_2` | `power_comp` per compressor | W | Compressor power |
 | `RTU_SA_FAN_WATT` | `power_fan` | W | Supply fan power |
-| `VAV_RM_WATT_<room>` | (VAV power) | W | VAV box power, 10 rooms |
-| `VAV_RM_SAT_<room>` | (VAV discharge temp) | °F | VAV box supply air temperature, 10 rooms |
+| `VAV_RM_WATT_<room>` | `power_vav_<room>` | W | VAV box power, 10 rooms |
+| `VAV_RM_SAT_<room>` | `vav_sat_<room>` | °F | VAV box discharge air temperature, 10 rooms. Used to cross-check SAT |
 
 Rooms: 102, 103, 104, 105, 106, 202, 203, 204, 205, 206.
 

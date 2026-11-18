@@ -1,36 +1,35 @@
-"""Reproducible loader for the LBNL RTU FDD data sets.
+"""LBNL RTU FDD data sets: labels from file names, loading through the bundled point mappings.
 
-`load_lbnl_file` turns one raw CSV into a canonical, SI-unit Polars frame plus a `LoadReport` that
-records every data-quality action taken. Raw files are only read, never modified. Nothing is dropped
-or imputed silently: invalid values become null and are counted.
+The generic loader (`faultiq.ingestion.loader`) does the work; this module only adds what is
+specific to LBNL: parsing fault labels from documented file names and picking the right mapping.
 """
 
 from __future__ import annotations
 
-import hashlib
 import re
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Literal
 
 import polars as pl
 
-import faultiq
-from faultiq.ingestion.roles import EXCLUDED, MAPPINGS, Dataset, plausible_range
+from faultiq.ingestion.loader import LoadReport, SchemaError, load_csv
+from faultiq.ingestion.mapping import PointMapping, bundled_mapping
 
-TS_SOURCE = "Datetime"
-TS_FORMAT = "%Y-%m-%d %H:%M:%S"
-NULL_TOKENS = ["NAN", "NaN", "nan", "NA", ""]
-# Experimental-set logging dropouts: these three independent sensors all read exactly 0 deg F.
-_DROPOUT_PROBES = ("RTU_OA_TEMP", "RTU_RA_TEMP", "TERM_RM_TEMP_102")
+Dataset = Literal["simulated", "experimental", "field"]
+__all__ = [
+    "FileLabel",
+    "LoadedFile",
+    "SchemaError",
+    "UnknownFileError",
+    "lbnl_mapping",
+    "load_lbnl_file",
+    "parse_file_name",
+]
 
 
 class UnknownFileError(ValueError):
     """The file name matches no documented LBNL naming pattern."""
-
-
-class SchemaError(ValueError):
-    """The file is missing columns that its dataset documents."""
 
 
 @dataclass(frozen=True)
@@ -97,118 +96,18 @@ def parse_file_name(name: str) -> FileLabel:
 
 
 @dataclass
-class LoadReport:
-    source_file: str
-    sha256: str
-    pipeline_version: str
-    dataset: str
-    rows: int = 0
-    timestamp_unparsed: int = 0
-    duplicate_timestamps: int = 0
-    non_increasing_steps: int = 0
-    gaps_over_1min: int = 0
-    dropout_rows: int = 0
-    unmapped_columns: list[str] = field(default_factory=list)
-    excluded_columns: dict[str, str] = field(default_factory=dict)
-    source_nulls: dict[str, int] = field(default_factory=dict)
-    unparseable_values: dict[str, int] = field(default_factory=dict)
-    infinite_values: dict[str, int] = field(default_factory=dict)
-    out_of_range: dict[str, int] = field(default_factory=dict)
-    final_nulls: dict[str, int] = field(default_factory=dict)
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
-
-
-@dataclass
 class LoadedFile:
     label: FileLabel
     data: pl.DataFrame
     report: LoadReport
 
 
-def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            h.update(chunk)
-    return h.hexdigest()
+def lbnl_mapping(dataset: Dataset) -> PointMapping:
+    return bundled_mapping(f"lbnl_{dataset}")
 
 
 def load_lbnl_file(path: Path) -> LoadedFile:
     """Load one LBNL CSV into canonical roles and SI units, with a full data-quality report."""
     label = parse_file_name(path.name)
-    mapping = MAPPINGS[label.dataset]
-    excluded = EXCLUDED[label.dataset]
-    report = LoadReport(
-        source_file=path.name,
-        sha256=_sha256(path),
-        pipeline_version=faultiq.PIPELINE_VERSION,
-        dataset=label.dataset,
-    )
-
-    # Read every column as text so mixed int/float columns can't be inferred differently per file.
-    raw = pl.read_csv(path, null_values=NULL_TOKENS, infer_schema_length=0)
-    missing = [c for c in [TS_SOURCE, *mapping] if c not in raw.columns]
-    if missing:
-        raise SchemaError(f"{path.name}: missing documented columns {missing}")
-    report.rows = raw.height
-    report.unmapped_columns = sorted(
-        c for c in raw.columns if c != TS_SOURCE and c not in mapping and c not in excluded
-    )
-    report.excluded_columns = {c: why for c, why in excluded.items() if c in raw.columns}
-
-    # Timestamps: parse and audit regularity; never reorder or deduplicate silently.
-    ts = raw[TS_SOURCE].str.strptime(pl.Datetime("us"), TS_FORMAT, strict=False)
-    report.timestamp_unparsed = int(ts.null_count() - raw[TS_SOURCE].null_count())
-    steps = ts.diff().dt.total_seconds().drop_nulls()
-    report.duplicate_timestamps = int(ts.len() - ts.n_unique())
-    report.non_increasing_steps = int((steps <= 0).sum())
-    report.gaps_over_1min = int((steps > 60).sum())
-
-    numeric = raw.select(
-        [pl.col(c).cast(pl.Float64, strict=False).alias(c) for c in mapping]
-        + (
-            [
-                pl.col(c).cast(pl.Float64, strict=False).alias(c)
-                for c in _DROPOUT_PROBES
-                if c in raw.columns and c not in mapping
-            ]
-        )
-    )
-
-    dropout = pl.Series("qc_dropout", [False] * raw.height)
-    if label.dataset == "experimental" and all(c in numeric.columns for c in _DROPOUT_PROBES):
-        dropout = (
-            numeric.select(
-                pl.all_horizontal([pl.col(c) == 0.0 for c in _DROPOUT_PROBES]).fill_null(False)
-            )
-            .to_series()
-            .alias("qc_dropout")
-        )
-    report.dropout_rows = int(dropout.sum())
-
-    out: dict[str, pl.Series] = {"timestamp": ts}
-    for source, (role, convert) in mapping.items():
-        text = raw[source]
-        values = numeric[source]
-        report.source_nulls[role] = int(text.null_count())
-        report.unparseable_values[role] = int(values.null_count() - text.null_count())
-
-        is_inf = values.is_infinite().fill_null(False)
-        report.infinite_values[role] = int(is_inf.sum())
-        values = pl.select(
-            pl.when(is_inf | dropout).then(None).otherwise(values).alias(role)
-        ).to_series()
-        values = pl.select(convert(pl.lit(values)).alias(role)).to_series()
-
-        bounds = plausible_range(role)
-        if bounds is not None:
-            bad = ((values < bounds.low) | (values > bounds.high)).fill_null(False)
-            report.out_of_range[role] = int(bad.sum())
-            values = pl.select(pl.when(bad).then(None).otherwise(values).alias(role)).to_series()
-        report.final_nulls[role] = int(values.null_count())
-        out[role] = values
-
-    out["qc_dropout"] = dropout
-    return LoadedFile(label=label, data=pl.DataFrame(out), report=report)
+    result = load_csv(path, lbnl_mapping(label.dataset))
+    return LoadedFile(label=label, data=result.data, report=result.report)

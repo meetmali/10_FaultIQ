@@ -10,10 +10,14 @@ import pytest
 from faultiq.ingestion.lbnl import (
     SchemaError,
     UnknownFileError,
+    lbnl_mapping,
     load_lbnl_file,
     parse_file_name,
 )
-from faultiq.ingestion.roles import EXPERIMENTAL, FIELD, SIMULATED
+
+SIMULATED = list(lbnl_mapping("simulated").points)
+EXPERIMENTAL = list(lbnl_mapping("experimental").points)
+FIELD = list(lbnl_mapping("field").points)
 
 
 def write_csv(path: Path, columns: list[str], rows: list[list[object]]) -> Path:
@@ -184,7 +188,7 @@ def test_timestamp_problems_are_counted_not_fixed(tmp_path: Path) -> None:
 
 
 def exp_file(tmp_path: Path, rows: list[dict[str, object]]) -> Path:
-    cols = ["Datetime", *EXPERIMENTAL, "TERM_RM_TEMP_102"]
+    cols = ["Datetime", *EXPERIMENTAL]
     normal = {c: 1 for c in EXPERIMENTAL}
     normal.update(
         {
@@ -232,7 +236,8 @@ def test_experimental_quality_issues_are_flagged(tmp_path: Path) -> None:
     assert r.dropout_rows == 1
     assert d["qc_dropout"].to_list() == [False, False, False, True]
     assert d["oat"][3] is None and d["sat"][3] is None  # dropout zeros never survive as 0 deg F
-    assert "TERM_RM_TEMP_102" in r.unmapped_columns
+    assert r.unmapped_columns == []  # every ORNL column is mapped since Phase 2
+    assert d["zone_temp_102"][3] is None
 
 
 # ---------- field ----------

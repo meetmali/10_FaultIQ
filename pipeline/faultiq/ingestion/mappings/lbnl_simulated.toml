@@ -1,0 +1,37 @@
+# LBNL simulated RTU (NREL Modelica + EnergyPlus)
+# Verified against the downloaded files (docs/data-dictionary.md). Pressures are psia x 1e5 although documented as Pa (verified by suction superheat, Phase 1).
+
+name = "lbnl_simulated"
+
+[timestamp]
+column = "Datetime"
+format = "%Y-%m-%d %H:%M:%S"
+
+[points]
+"RTU_SA_TEMP"        = { role = "sat", unit = "degF" }
+"RTU_SA_FLOW"        = { role = "sa_flow", unit = "cfm" }
+"RTU_SA_HUM"         = { role = "sa_rh", unit = "%RH" }
+"RTU_RA_TEMP"        = { role = "rat", unit = "degF" }
+"RTU_RA_FLOW"        = { role = "ra_flow", unit = "cfm" }
+"RTU_RA_HUM"         = { role = "ra_rh", unit = "%RH" }
+"RTU_OA_TEMP"        = { role = "oat", unit = "degF" }
+"RTU_OA_FLOW"        = { role = "oa_flow", unit = "cfm" }
+"RTU_OA_HUM"         = { role = "oa_rh", unit = "%RH" }
+"RTU_STG_STA"        = { role = "comp_stage", unit = "fraction" }
+"RTU_REFG_DISC_TEMP" = { role = "refg_disc_temp", unit = "degF" }
+"RTU_REFG_COND_TEMP" = { role = "refg_cond_temp", unit = "degF" }
+"RTU_REFG_SUCT_TEMP" = { role = "refg_suct_temp", unit = "degF" }
+"RTU_REFG_DISC_PRES" = { role = "refg_disc_pres", unit = "psia_e5" }
+"RTU_REFG_COND_PRES" = { role = "refg_cond_pres", unit = "psia_e5" }
+"RTU_REFG_SUCT_PRES" = { role = "refg_suct_pres", unit = "psia_e5" }
+"RTU_TOT_WATT"       = { role = "power_total", unit = "W" }
+"RTU_COMP_WATT"      = { role = "power_comp", unit = "W" }
+"RTU_SA_FAN_WATT"    = { role = "power_fan", unit = "W" }
+"RTU_SEN_CAPA"       = { role = "cap_sensible", unit = "W" }
+"RTU_TOT_CAPA"       = { role = "cap_total", unit = "W" }
+"ZA_TEMP"            = { role = "zone_temp", unit = "degF" }
+"ZA_HUM"             = { role = "zone_rh", unit = "%RH" }
+"ZA_TEMP_SPT"        = { role = "zone_temp_sp", unit = "degF" }
+
+[quality]
+null_tokens = ["NAN", "NaN", "nan", "NA", ""]

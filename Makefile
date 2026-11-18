@@ -1,4 +1,4 @@
-.PHONY: help setup up down logs api worker frontend test test-api test-pipeline test-frontend lint format typecheck check
+.PHONY: help setup up down logs api worker frontend test test-api test-pipeline test-frontend lint format typecheck check process-lbnl
 
 export DOTNET_CLI_TELEMETRY_OPTOUT := 1
 export DOTNET_NOLOGO := 1
@@ -28,6 +28,9 @@ worker:  ## Run the Python worker locally (no Docker)
 
 frontend:  ## Run the frontend dev server locally (no Docker)
 	cd frontend && npm run dev
+
+process-lbnl:  ## Process the LBNL dataset in data/raw into data/processed
+	cd pipeline && uv run python -m faultiq process-lbnl ../data/raw/LBNL_FDD_Data_Sets_RTU_all_3 --out ../data/processed/v0.2.0
 
 test: test-api test-pipeline test-frontend  ## Run all tests
 

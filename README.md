@@ -103,6 +103,17 @@ make check      # dotnet format/build/test, ruff, mypy, pytest, eslint, tsc, vit
 
 Run `make help` to list all targets.
 
+## Running the data pipeline
+
+```bash
+make process-lbnl                                   # all 81 LBNL files -> data/processed/v<version>/
+cd pipeline && uv run python -m faultiq draft-mapping ../my_export.csv > ../my_rtu.toml
+cd pipeline && uv run python -m faultiq process ../my_export.csv --mapping ../my_rtu.toml
+```
+
+Every input gets a JSON report (accepted, accepted with warnings, or quarantined, and why). Outputs are
+Parquet files described in [docs/processed-data.md](docs/processed-data.md).
+
 ## Deploying (public demo or self-hosting)
 
 One production setup serves both purposes. Set `DEMO_MODE=true` for a read-only, sample-data demo, or `false`

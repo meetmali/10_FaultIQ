@@ -1,0 +1,71 @@
+# LBNL experimental RTU (ORNL Flexible Research Platform)
+# Verified against the downloaded files (docs/data-dictionary.md). Damper signals are 0 to 100 percent although documented as 0 to 1. All-zero rows are logging dropouts.
+
+name = "lbnl_experimental"
+
+[timestamp]
+column = "Datetime"
+format = "%Y-%m-%d %H:%M:%S"
+
+[points]
+"RTU_OA_DMPR_DM"    = { role = "oa_damper_cmd", unit = "percent" }
+"RTU_RA_DMPR_DM"    = { role = "ra_damper_cmd", unit = "percent" }
+"RTU_OA_TEMP"       = { role = "oat", unit = "degF" }
+"RTU_MA_TEMP"       = { role = "mat", unit = "degF" }
+"RTU_SA_TEMP"       = { role = "sat", unit = "degF" }
+"RTU_RA_TEMP"       = { role = "rat", unit = "degF" }
+"RTU_SA_FLOW"       = { role = "sa_flow", unit = "cfm" }
+"RTU_TOT_WATT"      = { role = "power_total", unit = "W" }
+"RTU_GAS_CSUM"      = { role = "gas_flow", unit = "SCFM" }
+"TERM_RM_TEMP_HSPT" = { role = "zone_heat_sp", unit = "degF" }
+"TERM_RM_TEMP_CSPT" = { role = "zone_cool_sp", unit = "degF" }
+"OCCU_MOD"          = { role = "occupied", unit = "0/1" }
+"RTU_COMP_WATT_1"   = { role = "power_comp_1", unit = "W" }
+"RTU_COMP_WATT_2"   = { role = "power_comp_2", unit = "W" }
+"RTU_SA_FAN_WATT"   = { role = "power_fan", unit = "W" }
+"HVAC_TOT_WATT"     = { role = "power_hvac", unit = "W" }
+"TERM_RM_TEMP_102"  = { role = "zone_temp_102", unit = "degF" }
+"TERM_RM_TEMP_103"  = { role = "zone_temp_103", unit = "degF" }
+"TERM_RM_TEMP_104"  = { role = "zone_temp_104", unit = "degF" }
+"TERM_RM_TEMP_105"  = { role = "zone_temp_105", unit = "degF" }
+"TERM_RM_TEMP_106"  = { role = "zone_temp_106", unit = "degF" }
+"TERM_RM_TEMP_202"  = { role = "zone_temp_202", unit = "degF" }
+"TERM_RM_TEMP_203"  = { role = "zone_temp_203", unit = "degF" }
+"TERM_RM_TEMP_204"  = { role = "zone_temp_204", unit = "degF" }
+"TERM_RM_TEMP_205"  = { role = "zone_temp_205", unit = "degF" }
+"TERM_RM_TEMP_206"  = { role = "zone_temp_206", unit = "degF" }
+"TERM_RM_HUMD_102"  = { role = "zone_rh_102", unit = "%RH" }
+"TERM_RM_HUMD_103"  = { role = "zone_rh_103", unit = "%RH" }
+"TERM_RM_HUMD_104"  = { role = "zone_rh_104", unit = "%RH" }
+"TERM_RM_HUMD_105"  = { role = "zone_rh_105", unit = "%RH" }
+"TERM_RM_HUMD_106"  = { role = "zone_rh_106", unit = "%RH" }
+"TERM_RM_HUMD_202"  = { role = "zone_rh_202", unit = "%RH" }
+"TERM_RM_HUMD_203"  = { role = "zone_rh_203", unit = "%RH" }
+"TERM_RM_HUMD_204"  = { role = "zone_rh_204", unit = "%RH" }
+"TERM_RM_HUMD_205"  = { role = "zone_rh_205", unit = "%RH" }
+"TERM_RM_HUMD_206"  = { role = "zone_rh_206", unit = "%RH" }
+"VAV_RM_SAT_102"    = { role = "vav_sat_102", unit = "degF" }
+"VAV_RM_SAT_103"    = { role = "vav_sat_103", unit = "degF" }
+"VAV_RM_SAT_104"    = { role = "vav_sat_104", unit = "degF" }
+"VAV_RM_SAT_105"    = { role = "vav_sat_105", unit = "degF" }
+"VAV_RM_SAT_106"    = { role = "vav_sat_106", unit = "degF" }
+"VAV_RM_SAT_202"    = { role = "vav_sat_202", unit = "degF" }
+"VAV_RM_SAT_203"    = { role = "vav_sat_203", unit = "degF" }
+"VAV_RM_SAT_204"    = { role = "vav_sat_204", unit = "degF" }
+"VAV_RM_SAT_205"    = { role = "vav_sat_205", unit = "degF" }
+"VAV_RM_SAT_206"    = { role = "vav_sat_206", unit = "degF" }
+"VAV_RM_WATT_102"   = { role = "power_vav_102", unit = "W" }
+"VAV_RM_WATT_103"   = { role = "power_vav_103", unit = "W" }
+"VAV_RM_WATT_104"   = { role = "power_vav_104", unit = "W" }
+"VAV_RM_WATT_105"   = { role = "power_vav_105", unit = "W" }
+"VAV_RM_WATT_106"   = { role = "power_vav_106", unit = "W" }
+"VAV_RM_WATT_202"   = { role = "power_vav_202", unit = "W" }
+"VAV_RM_WATT_203"   = { role = "power_vav_203", unit = "W" }
+"VAV_RM_WATT_204"   = { role = "power_vav_204", unit = "W" }
+"VAV_RM_WATT_205"   = { role = "power_vav_205", unit = "W" }
+"VAV_RM_WATT_206"   = { role = "power_vav_206", unit = "W" }
+
+[quality]
+null_tokens = ["NAN", "NaN", "nan", "NA", ""]
+# Rows where these three independent sensors all read exactly 0 are logging dropouts.
+dropout_probes = ["RTU_OA_TEMP", "RTU_RA_TEMP", "TERM_RM_TEMP_102"]

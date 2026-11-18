@@ -1,0 +1,40 @@
+# LBNL field RTUs (UConn, Connecticut sites)
+# Verified against the downloaded files (docs/data-dictionary.md). ZA_HUM is a dead sensor stuck near -15 in every file.
+
+name = "lbnl_field"
+
+[timestamp]
+column = "Datetime"
+format = "%Y-%m-%d %H:%M:%S"
+
+[points]
+"RTU_RA_TEMP"          = { role = "rat", unit = "degC" }
+"RTU_SA_FAN_WATT"      = { role = "power_fan", unit = "W" }
+"RTU_COMP_WATT"        = { role = "power_comp_1", unit = "W" }
+"RTU_TOT_WATT"         = { role = "power_total", unit = "W" }
+"RTU_SA_FLOW"          = { role = "sa_flow", unit = "cfm" }
+"RTU_MA_HUM"           = { role = "ma_rh", unit = "%RH" }
+"RTU_OA_HUM"           = { role = "oa_rh", unit = "%RH" }
+"RTU_RA_HUM"           = { role = "ra_rh", unit = "%RH" }
+"RTU_SA_HUM"           = { role = "sa_rh", unit = "%RH" }
+"RTU_SA_TEMP"          = { role = "sat", unit = "degC" }
+"RTU_MA_TEMP"          = { role = "mat", unit = "degC" }
+"RTU_OA_TEMP"          = { role = "oat", unit = "degC" }
+"ZA_TEMP"              = { role = "zone_temp", unit = "degC" }
+"RTU_REFG_DISC_PRES_1" = { role = "refg_disc_pres_1", unit = "bar" }
+"RTU_REFG_DISC_PRES_2" = { role = "refg_disc_pres_2", unit = "bar" }
+"RTU_REFG_SUCT_PRES_1" = { role = "refg_suct_pres_1", unit = "bar" }
+"RTU_REFG_SUCT_PRES_2" = { role = "refg_suct_pres_2", unit = "bar" }
+"RTU_LA_COND_TEMP"     = { role = "cond_leaving_air_temp", unit = "degC" }
+"RTU_REFG_COND_TEMP_1" = { role = "refg_cond_temp_1", unit = "degC" }
+"RTU_REFG_COND_TEMP_2" = { role = "refg_cond_temp_2", unit = "degC" }
+"RTU_REFG_SUCT_TEMP_1" = { role = "refg_suct_temp_1", unit = "degC" }
+"RTU_REFG_SUCT_TEMP_2" = { role = "refg_suct_temp_2", unit = "degC" }
+"RTU_REFG_DISC_TEMP_1" = { role = "refg_disc_temp_1", unit = "degC" }
+"RTU_REFG_DISC_TEMP_2" = { role = "refg_disc_temp_2", unit = "degC" }
+
+[excluded]
+"ZA_HUM" = "dead sensor: stuck near -15 in every file"
+
+[quality]
+null_tokens = ["NAN", "NaN", "nan", "NA", ""]
