@@ -1,0 +1,1917 @@
+{
+  "detection_version": "0.1.0",
+  "experimental": {
+    "coverage": [
+      {
+        "fault": "economizer_setpoint_offset",
+        "observable_share": 0.020833333333333332,
+        "windows": 384
+      },
+      {
+        "fault": "fault_free",
+        "observable_share": 0.37797619047619047,
+        "windows": 336
+      },
+      {
+        "fault": "oa_damper_stuck",
+        "observable_share": 0.3333333333333333,
+        "windows": 384
+      },
+      {
+        "fault": "sat_sensor_bias",
+        "observable_share": 0.3359375,
+        "windows": 384
+      }
+    ],
+    "detectors": {
+      "economizer_rules/all": {
+        "abstained_share": {
+          "faulty": 0.1321,
+          "normal": 0.2441
+        },
+        "alarm_signals": [
+          {
+            "fault": "fault_free",
+            "len": 5,
+            "top_signal": "sat_disagrees_with_vav"
+          },
+          {
+            "fault": "oa_damper_stuck",
+            "len": 27,
+            "top_signal": "economizing_when_should_not"
+          },
+          {
+            "fault": "oa_damper_stuck",
+            "len": 1,
+            "top_signal": "sat_disagrees_with_vav"
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "len": 70,
+            "top_signal": "sat_disagrees_with_vav"
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "len": 1,
+            "top_signal": "economizing_when_should_not"
+          }
+        ],
+        "false_alarms_by_mode": [
+          {
+            "false_alarm_rate": 0.052083333333333336,
+            "mode": "cooling",
+            "windows": 96
+          },
+          {
+            "false_alarm_rate": 0.0,
+            "mode": "economizer",
+            "windows": 31
+          }
+        ],
+        "recall_by_fault": [
+          {
+            "abstained": 1.0,
+            "fault": "economizer_setpoint_offset",
+            "intensity": -4.0,
+            "recall": 0.0,
+            "windows": 4
+          },
+          {
+            "abstained": 1.0,
+            "fault": "economizer_setpoint_offset",
+            "intensity": -2.0,
+            "recall": 0.0,
+            "windows": 4
+          },
+          {
+            "abstained": 0.0,
+            "fault": "oa_damper_stuck",
+            "intensity": 5.0,
+            "recall": 0.03571428571428571,
+            "windows": 28
+          },
+          {
+            "abstained": 0.0,
+            "fault": "oa_damper_stuck",
+            "intensity": 10.0,
+            "recall": 0.0,
+            "windows": 29
+          },
+          {
+            "abstained": 0.325,
+            "fault": "oa_damper_stuck",
+            "intensity": 50.0,
+            "recall": 0.3,
+            "windows": 40
+          },
+          {
+            "abstained": 0.03225806451612903,
+            "fault": "oa_damper_stuck",
+            "intensity": 100.0,
+            "recall": 0.4838709677419355,
+            "windows": 31
+          },
+          {
+            "abstained": 0.25,
+            "fault": "sat_sensor_bias",
+            "intensity": -4.0,
+            "recall": 0.0,
+            "windows": 12
+          },
+          {
+            "abstained": 0.3,
+            "fault": "sat_sensor_bias",
+            "intensity": -2.0,
+            "recall": 0.2,
+            "windows": 10
+          },
+          {
+            "abstained": 0.10416666666666667,
+            "fault": "sat_sensor_bias",
+            "intensity": 2.0,
+            "recall": 0.5833333333333334,
+            "windows": 48
+          },
+          {
+            "abstained": 0.03389830508474576,
+            "fault": "sat_sensor_bias",
+            "intensity": 4.0,
+            "recall": 0.6949152542372882,
+            "windows": 59
+          }
+        ],
+        "test": {
+          "auc": 0.8002,
+          "f1": 0.5366,
+          "false_positive_rate": 0.0394,
+          "fn": 166,
+          "fp": 5,
+          "precision": 0.9519,
+          "recall": 0.3736,
+          "tn": 122,
+          "tp": 99
+        },
+        "thresholds_by_test_season": {
+          "Fall_2020": 0.0,
+          "Spring_2021": 0.0196,
+          "Summer_2021": 1.0,
+          "Winter_2022": 0.02
+        }
+      },
+      "economizer_rules/basic": {
+        "abstained_share": {
+          "faulty": 0.1321,
+          "normal": 0.2441
+        },
+        "alarm_signals": [
+          {
+            "fault": "oa_damper_stuck",
+            "len": 57,
+            "top_signal": "economizing_when_should_not"
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "len": 1,
+            "top_signal": "economizing_when_should_not"
+          }
+        ],
+        "false_alarms_by_mode": [
+          {
+            "false_alarm_rate": 0.0,
+            "mode": "cooling",
+            "windows": 96
+          },
+          {
+            "false_alarm_rate": 0.0,
+            "mode": "economizer",
+            "windows": 31
+          }
+        ],
+        "recall_by_fault": [
+          {
+            "abstained": 1.0,
+            "fault": "economizer_setpoint_offset",
+            "intensity": -4.0,
+            "recall": 0.0,
+            "windows": 4
+          },
+          {
+            "abstained": 1.0,
+            "fault": "economizer_setpoint_offset",
+            "intensity": -2.0,
+            "recall": 0.0,
+            "windows": 4
+          },
+          {
+            "abstained": 0.0,
+            "fault": "oa_damper_stuck",
+            "intensity": 5.0,
+            "recall": 0.0,
+            "windows": 28
+          },
+          {
+            "abstained": 0.0,
+            "fault": "oa_damper_stuck",
+            "intensity": 10.0,
+            "recall": 0.0,
+            "windows": 29
+          },
+          {
+            "abstained": 0.325,
+            "fault": "oa_damper_stuck",
+            "intensity": 50.0,
+            "recall": 0.675,
+            "windows": 40
+          },
+          {
+            "abstained": 0.03225806451612903,
+            "fault": "oa_damper_stuck",
+            "intensity": 100.0,
+            "recall": 0.967741935483871,
+            "windows": 31
+          },
+          {
+            "abstained": 0.25,
+            "fault": "sat_sensor_bias",
+            "intensity": -4.0,
+            "recall": 0.0,
+            "windows": 12
+          },
+          {
+            "abstained": 0.3,
+            "fault": "sat_sensor_bias",
+            "intensity": -2.0,
+            "recall": 0.0,
+            "windows": 10
+          },
+          {
+            "abstained": 0.10416666666666667,
+            "fault": "sat_sensor_bias",
+            "intensity": 2.0,
+            "recall": 0.020833333333333332,
+            "windows": 48
+          },
+          {
+            "abstained": 0.03389830508474576,
+            "fault": "sat_sensor_bias",
+            "intensity": 4.0,
+            "recall": 0.0,
+            "windows": 59
+          }
+        ],
+        "test": {
+          "auc": 0.6387,
+          "f1": 0.3591,
+          "false_positive_rate": 0.0,
+          "fn": 207,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.2189,
+          "tn": 127,
+          "tp": 58
+        },
+        "thresholds_by_test_season": {
+          "Fall_2020": 0.0,
+          "Spring_2021": 0.0,
+          "Summer_2021": 0.0,
+          "Winter_2022": 0.0
+        }
+      },
+      "normal_model/all": {
+        "abstained_share": {
+          "faulty": 0.0075,
+          "normal": 0.0787
+        },
+        "alarm_signals": [
+          {
+            "fault": "economizer_setpoint_offset",
+            "len": 7,
+            "top_signal": "oa_damper_cmd"
+          },
+          {
+            "fault": "fault_free",
+            "len": 19,
+            "top_signal": "oa_damper_cmd"
+          },
+          {
+            "fault": "oa_damper_stuck",
+            "len": 68,
+            "top_signal": "oa_damper_cmd"
+          },
+          {
+            "fault": "oa_damper_stuck",
+            "len": 1,
+            "top_signal": "vav_sat_min"
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "len": 96,
+            "top_signal": "vav_sat_min"
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "len": 8,
+            "top_signal": "oa_damper_cmd"
+          }
+        ],
+        "false_alarms_by_mode": [
+          {
+            "false_alarm_rate": 0.0,
+            "mode": "cooling",
+            "windows": 96
+          },
+          {
+            "false_alarm_rate": 0.6129032258064516,
+            "mode": "economizer",
+            "windows": 31
+          }
+        ],
+        "recall_by_fault": [
+          {
+            "abstained": 0.0,
+            "fault": "economizer_setpoint_offset",
+            "intensity": -4.0,
+            "recall": 1.0,
+            "windows": 4
+          },
+          {
+            "abstained": 0.0,
+            "fault": "economizer_setpoint_offset",
+            "intensity": -2.0,
+            "recall": 0.75,
+            "windows": 4
+          },
+          {
+            "abstained": 0.03571428571428571,
+            "fault": "oa_damper_stuck",
+            "intensity": 5.0,
+            "recall": 0.0,
+            "windows": 28
+          },
+          {
+            "abstained": 0.0,
+            "fault": "oa_damper_stuck",
+            "intensity": 10.0,
+            "recall": 0.0,
+            "windows": 29
+          },
+          {
+            "abstained": 0.025,
+            "fault": "oa_damper_stuck",
+            "intensity": 50.0,
+            "recall": 0.975,
+            "windows": 40
+          },
+          {
+            "abstained": 0.0,
+            "fault": "oa_damper_stuck",
+            "intensity": 100.0,
+            "recall": 0.967741935483871,
+            "windows": 31
+          },
+          {
+            "abstained": 0.0,
+            "fault": "sat_sensor_bias",
+            "intensity": -4.0,
+            "recall": 1.0,
+            "windows": 12
+          },
+          {
+            "abstained": 0.0,
+            "fault": "sat_sensor_bias",
+            "intensity": -2.0,
+            "recall": 0.5,
+            "windows": 10
+          },
+          {
+            "abstained": 0.0,
+            "fault": "sat_sensor_bias",
+            "intensity": 2.0,
+            "recall": 0.6875,
+            "windows": 48
+          },
+          {
+            "abstained": 0.0,
+            "fault": "sat_sensor_bias",
+            "intensity": 4.0,
+            "recall": 0.9152542372881356,
+            "windows": 59
+          }
+        ],
+        "test": {
+          "auc": 0.894,
+          "f1": 0.7759,
+          "false_positive_rate": 0.1496,
+          "fn": 85,
+          "fp": 19,
+          "precision": 0.9045,
+          "recall": 0.6792,
+          "tn": 108,
+          "tp": 180
+        },
+        "thresholds_by_test_season": {
+          "Fall_2020": 14.6551,
+          "Spring_2021": 2.636,
+          "Summer_2021": 14.8509,
+          "Winter_2022": 2.5312
+        }
+      },
+      "normal_model/basic": {
+        "abstained_share": {
+          "faulty": 0.0075,
+          "normal": 0.0787
+        },
+        "alarm_signals": [
+          {
+            "fault": "economizer_setpoint_offset",
+            "len": 7,
+            "top_signal": "oa_damper_cmd"
+          },
+          {
+            "fault": "fault_free",
+            "len": 19,
+            "top_signal": "oa_damper_cmd"
+          },
+          {
+            "fault": "oa_damper_stuck",
+            "len": 68,
+            "top_signal": "oa_damper_cmd"
+          },
+          {
+            "fault": "oa_damper_stuck",
+            "len": 1,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "len": 20,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "len": 20,
+            "top_signal": "oa_damper_cmd"
+          }
+        ],
+        "false_alarms_by_mode": [
+          {
+            "false_alarm_rate": 0.0,
+            "mode": "cooling",
+            "windows": 96
+          },
+          {
+            "false_alarm_rate": 0.6129032258064516,
+            "mode": "economizer",
+            "windows": 31
+          }
+        ],
+        "recall_by_fault": [
+          {
+            "abstained": 0.0,
+            "fault": "economizer_setpoint_offset",
+            "intensity": -4.0,
+            "recall": 1.0,
+            "windows": 4
+          },
+          {
+            "abstained": 0.0,
+            "fault": "economizer_setpoint_offset",
+            "intensity": -2.0,
+            "recall": 0.75,
+            "windows": 4
+          },
+          {
+            "abstained": 0.03571428571428571,
+            "fault": "oa_damper_stuck",
+            "intensity": 5.0,
+            "recall": 0.0,
+            "windows": 28
+          },
+          {
+            "abstained": 0.0,
+            "fault": "oa_damper_stuck",
+            "intensity": 10.0,
+            "recall": 0.0,
+            "windows": 29
+          },
+          {
+            "abstained": 0.025,
+            "fault": "oa_damper_stuck",
+            "intensity": 50.0,
+            "recall": 0.975,
+            "windows": 40
+          },
+          {
+            "abstained": 0.0,
+            "fault": "oa_damper_stuck",
+            "intensity": 100.0,
+            "recall": 0.967741935483871,
+            "windows": 31
+          },
+          {
+            "abstained": 0.0,
+            "fault": "sat_sensor_bias",
+            "intensity": -4.0,
+            "recall": 0.25,
+            "windows": 12
+          },
+          {
+            "abstained": 0.0,
+            "fault": "sat_sensor_bias",
+            "intensity": -2.0,
+            "recall": 0.5,
+            "windows": 10
+          },
+          {
+            "abstained": 0.0,
+            "fault": "sat_sensor_bias",
+            "intensity": 2.0,
+            "recall": 0.14583333333333334,
+            "windows": 48
+          },
+          {
+            "abstained": 0.0,
+            "fault": "sat_sensor_bias",
+            "intensity": 4.0,
+            "recall": 0.423728813559322,
+            "windows": 59
+          }
+        ],
+        "test": {
+          "auc": 0.8196,
+          "f1": 0.58,
+          "false_positive_rate": 0.1496,
+          "fn": 149,
+          "fp": 19,
+          "precision": 0.8593,
+          "recall": 0.4377,
+          "tn": 108,
+          "tp": 116
+        },
+        "thresholds_by_test_season": {
+          "Fall_2020": 14.8469,
+          "Spring_2021": 4.0504,
+          "Summer_2021": 14.4703,
+          "Winter_2022": 3.4208
+        }
+      }
+    },
+    "windows": {
+      "test_evaluable": 392
+    }
+  },
+  "generated": "2026-11-19",
+  "max_false_alarm_rate_on_validation": 0.05,
+  "min_applicable_minutes": 10,
+  "min_minutes": 30,
+  "pipeline_version": "0.2.0",
+  "simulated": {
+    "coverage": [
+      {
+        "fault": "condenser_fouling",
+        "observable_share": 0.9976905311778291,
+        "windows": 2165
+      },
+      {
+        "fault": "evaporator_fouling",
+        "observable_share": 0.9976905311778291,
+        "windows": 2165
+      },
+      {
+        "fault": "fault_free",
+        "observable_share": 0.9976905311778291,
+        "windows": 433
+      },
+      {
+        "fault": "liquid_line_restriction",
+        "observable_share": 0.9971131639722863,
+        "windows": 1732
+      },
+      {
+        "fault": "refrigerant_overcharge",
+        "observable_share": 0.7405696689761355,
+        "windows": 1299
+      },
+      {
+        "fault": "refrigerant_undercharge",
+        "observable_share": 0.9976905311778291,
+        "windows": 1299
+      },
+      {
+        "fault": "suction_line_restriction",
+        "observable_share": 0.9976905311778291,
+        "windows": 1732
+      }
+    ],
+    "detectors": {
+      "limit_rules/all": {
+        "abstained_share": {
+          "faulty": 0.1343,
+          "normal": 0.1343
+        },
+        "alarm_signals": [
+          {
+            "fault": "condenser_fouling",
+            "len": 1433,
+            "top_signal": "condensing_approach"
+          },
+          {
+            "fault": "condenser_fouling",
+            "len": 22,
+            "top_signal": "sensible_heat_ratio"
+          },
+          {
+            "fault": "condenser_fouling",
+            "len": 8,
+            "top_signal": "comp_power_per_capacity"
+          },
+          {
+            "fault": "condenser_fouling",
+            "len": 3,
+            "top_signal": "subcooling"
+          },
+          {
+            "fault": "condenser_fouling",
+            "len": 3,
+            "top_signal": "sa_flow"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 1807,
+            "top_signal": "sa_flow"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 25,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 19,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 14,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 1,
+            "top_signal": "subcooling"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 1,
+            "top_signal": "sensible_heat_ratio"
+          },
+          {
+            "fault": "fault_free",
+            "len": 25,
+            "top_signal": "sensible_heat_ratio"
+          },
+          {
+            "fault": "fault_free",
+            "len": 3,
+            "top_signal": "subcooling"
+          },
+          {
+            "fault": "fault_free",
+            "len": 1,
+            "top_signal": "sa_flow"
+          },
+          {
+            "fault": "fault_free",
+            "len": 1,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 476,
+            "top_signal": "superheat"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 120,
+            "top_signal": "zone_temp_error"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 84,
+            "top_signal": "condensing_approach"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 53,
+            "top_signal": "sensible_heat_ratio"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 25,
+            "top_signal": "comp_power_per_capacity"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 10,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 8,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 7,
+            "top_signal": "subcooling"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 4,
+            "top_signal": "sa_flow"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 4,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 2,
+            "top_signal": "refg_disc_pres"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 1,
+            "top_signal": "power_comp"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 365,
+            "top_signal": "condensing_approach"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 94,
+            "top_signal": "sensible_heat_ratio"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 15,
+            "top_signal": "zone_temp_error"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 7,
+            "top_signal": "subcooling"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 5,
+            "top_signal": "comp_power_per_capacity"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 2,
+            "top_signal": "sa_flow"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 1,
+            "top_signal": "power_comp"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 61,
+            "top_signal": "sensible_heat_ratio"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 27,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 9,
+            "top_signal": "subcooling"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 7,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 4,
+            "top_signal": "sa_flow"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 2,
+            "top_signal": "condensing_approach"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 1,
+            "top_signal": "comp_power_per_capacity"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 1125,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 17,
+            "top_signal": "sensible_heat_ratio"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 1,
+            "top_signal": "comp_power_per_capacity"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 1,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 1,
+            "top_signal": "subcooling"
+          }
+        ],
+        "false_alarms_by_mode": [
+          {
+            "false_alarm_rate": 0.06944444444444445,
+            "mode": "cooling",
+            "windows": 432
+          }
+        ],
+        "recall_by_fault": [
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "condenser_fouling",
+            "intensity": 10.0,
+            "recall": 0.06944444444444445,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "condenser_fouling",
+            "intensity": 20.0,
+            "recall": 0.7384259259259259,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1388888888888889,
+            "fault": "condenser_fouling",
+            "intensity": 30.0,
+            "recall": 0.8611111111111112,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "condenser_fouling",
+            "intensity": 40.0,
+            "recall": 0.8634259259259259,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "condenser_fouling",
+            "intensity": 50.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 10.0,
+            "recall": 0.8587962962962963,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 20.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 30.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 40.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 50.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "liquid_line_restriction",
+            "intensity": 1.0,
+            "recall": 0.1087962962962963,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "liquid_line_restriction",
+            "intensity": 4.0,
+            "recall": 0.21064814814814814,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1345707656612529,
+            "fault": "liquid_line_restriction",
+            "intensity": 8.0,
+            "recall": 0.6566125290023201,
+            "windows": 431
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "liquid_line_restriction",
+            "intensity": 10.0,
+            "recall": 0.8634259259259259,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_overcharge",
+            "intensity": 10.0,
+            "recall": 0.8518518518518519,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_overcharge",
+            "intensity": 15.0,
+            "recall": 0.06944444444444445,
+            "windows": 432
+          },
+          {
+            "abstained": 0.07142857142857142,
+            "fault": "refrigerant_overcharge",
+            "intensity": 20.0,
+            "recall": 0.9285714285714286,
+            "windows": 98
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_undercharge",
+            "intensity": 10.0,
+            "recall": 0.0625,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "refrigerant_undercharge",
+            "intensity": 15.0,
+            "recall": 0.08796296296296297,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1388888888888889,
+            "fault": "refrigerant_undercharge",
+            "intensity": 20.0,
+            "recall": 0.10648148148148148,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "suction_line_restriction",
+            "intensity": 1.0,
+            "recall": 0.046296296296296294,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 3.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 6.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 9.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          }
+        ],
+        "test": {
+          "auc": 0.7833,
+          "f1": 0.7372,
+          "false_positive_rate": 0.0694,
+          "fn": 4158,
+          "fp": 30,
+          "precision": 0.9949,
+          "recall": 0.5856,
+          "tn": 402,
+          "tp": 5875
+        },
+        "threshold": 0.0452,
+        "validation": {
+          "f1": 0.7891,
+          "false_positive_rate": 0.05,
+          "fn": 3873,
+          "fp": 24,
+          "precision": 0.9967,
+          "recall": 0.6531,
+          "tn": 456,
+          "tp": 7292
+        }
+      },
+      "limit_rules/basic": {
+        "abstained_share": {
+          "faulty": 0.1343,
+          "normal": 0.1343
+        },
+        "alarm_signals": [
+          {
+            "fault": "condenser_fouling",
+            "len": 293,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "condenser_fouling",
+            "len": 78,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "condenser_fouling",
+            "len": 13,
+            "top_signal": "zone_temp_error"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 1333,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 530,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "fault_free",
+            "len": 36,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "fault_free",
+            "len": 11,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "fault_free",
+            "len": 2,
+            "top_signal": "zone_temp_error"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 333,
+            "top_signal": "zone_temp_error"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 287,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 264,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 102,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 94,
+            "top_signal": "zone_temp_error"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 31,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 504,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 87,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 7,
+            "top_signal": "zone_temp_error"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 1138,
+            "top_signal": "rat_minus_sat"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 35,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 2,
+            "top_signal": "zone_temp_error"
+          }
+        ],
+        "false_alarms_by_mode": [
+          {
+            "false_alarm_rate": 0.11342592592592593,
+            "mode": "cooling",
+            "windows": 432
+          }
+        ],
+        "recall_by_fault": [
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "condenser_fouling",
+            "intensity": 10.0,
+            "recall": 0.0763888888888889,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "condenser_fouling",
+            "intensity": 20.0,
+            "recall": 0.1875,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1388888888888889,
+            "fault": "condenser_fouling",
+            "intensity": 30.0,
+            "recall": 0.1736111111111111,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "condenser_fouling",
+            "intensity": 40.0,
+            "recall": 0.08796296296296297,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "condenser_fouling",
+            "intensity": 50.0,
+            "recall": 0.36342592592592593,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 10.0,
+            "recall": 0.8495370370370371,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 20.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 30.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 40.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 50.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "liquid_line_restriction",
+            "intensity": 1.0,
+            "recall": 0.06944444444444445,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "liquid_line_restriction",
+            "intensity": 4.0,
+            "recall": 0.25,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1345707656612529,
+            "fault": "liquid_line_restriction",
+            "intensity": 8.0,
+            "recall": 0.8654292343387471,
+            "windows": 431
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "liquid_line_restriction",
+            "intensity": 10.0,
+            "recall": 0.8634259259259259,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_overcharge",
+            "intensity": 10.0,
+            "recall": 0.1574074074074074,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_overcharge",
+            "intensity": 15.0,
+            "recall": 0.1574074074074074,
+            "windows": 432
+          },
+          {
+            "abstained": 0.07142857142857142,
+            "fault": "refrigerant_overcharge",
+            "intensity": 20.0,
+            "recall": 0.9285714285714286,
+            "windows": 98
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_undercharge",
+            "intensity": 10.0,
+            "recall": 0.15046296296296297,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "refrigerant_undercharge",
+            "intensity": 15.0,
+            "recall": 0.41898148148148145,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1388888888888889,
+            "fault": "refrigerant_undercharge",
+            "intensity": 20.0,
+            "recall": 0.8148148148148148,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "suction_line_restriction",
+            "intensity": 1.0,
+            "recall": 0.2037037037037037,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 3.0,
+            "recall": 0.7800925925925926,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 6.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 9.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          }
+        ],
+        "test": {
+          "auc": 0.7038,
+          "f1": 0.6746,
+          "false_positive_rate": 0.1134,
+          "fn": 4902,
+          "fp": 49,
+          "precision": 0.9905,
+          "recall": 0.5114,
+          "tn": 383,
+          "tp": 5131
+        },
+        "threshold": 0.0051,
+        "validation": {
+          "f1": 0.7158,
+          "false_positive_rate": 0.05,
+          "fn": 4929,
+          "fp": 24,
+          "precision": 0.9962,
+          "recall": 0.5585,
+          "tn": 456,
+          "tp": 6236
+        }
+      },
+      "normal_model/all": {
+        "abstained_share": {
+          "faulty": 0.1343,
+          "normal": 0.1343
+        },
+        "alarm_signals": [
+          {
+            "fault": "condenser_fouling",
+            "len": 1042,
+            "top_signal": "refg_disc_pres"
+          },
+          {
+            "fault": "condenser_fouling",
+            "len": 725,
+            "top_signal": "refg_disc_temp"
+          },
+          {
+            "fault": "condenser_fouling",
+            "len": 11,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 1209,
+            "top_signal": "sa_flow"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 661,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "fault_free",
+            "len": 48,
+            "top_signal": "refg_disc_temp"
+          },
+          {
+            "fault": "fault_free",
+            "len": 13,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 818,
+            "top_signal": "refg_disc_temp"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 358,
+            "top_signal": "refg_disc_pres"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 233,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 353,
+            "top_signal": "refg_disc_pres"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 160,
+            "top_signal": "refg_disc_temp"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 21,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 288,
+            "top_signal": "refg_disc_temp"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 239,
+            "top_signal": "refg_disc_pres"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 150,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 1,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 1479,
+            "top_signal": "refg_suct_pres"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 10,
+            "top_signal": "refg_disc_temp"
+          }
+        ],
+        "false_alarms_by_mode": [
+          {
+            "false_alarm_rate": 0.1412037037037037,
+            "mode": "cooling",
+            "windows": 432
+          }
+        ],
+        "recall_by_fault": [
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "condenser_fouling",
+            "intensity": 10.0,
+            "recall": 0.6597222222222222,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "condenser_fouling",
+            "intensity": 20.0,
+            "recall": 0.8634259259259259,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1388888888888889,
+            "fault": "condenser_fouling",
+            "intensity": 30.0,
+            "recall": 0.8611111111111112,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "condenser_fouling",
+            "intensity": 40.0,
+            "recall": 0.8634259259259259,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "condenser_fouling",
+            "intensity": 50.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 10.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 20.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 30.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 40.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 50.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "liquid_line_restriction",
+            "intensity": 1.0,
+            "recall": 0.6689814814814815,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "liquid_line_restriction",
+            "intensity": 4.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1345707656612529,
+            "fault": "liquid_line_restriction",
+            "intensity": 8.0,
+            "recall": 0.8654292343387471,
+            "windows": 431
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "liquid_line_restriction",
+            "intensity": 10.0,
+            "recall": 0.8634259259259259,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_overcharge",
+            "intensity": 10.0,
+            "recall": 0.8634259259259259,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_overcharge",
+            "intensity": 15.0,
+            "recall": 0.16203703703703703,
+            "windows": 432
+          },
+          {
+            "abstained": 0.07142857142857142,
+            "fault": "refrigerant_overcharge",
+            "intensity": 20.0,
+            "recall": 0.9285714285714286,
+            "windows": 98
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_undercharge",
+            "intensity": 10.0,
+            "recall": 0.22453703703703703,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "refrigerant_undercharge",
+            "intensity": 15.0,
+            "recall": 0.4837962962962963,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1388888888888889,
+            "fault": "refrigerant_undercharge",
+            "intensity": 20.0,
+            "recall": 0.8611111111111112,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "suction_line_restriction",
+            "intensity": 1.0,
+            "recall": 0.8425925925925926,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 3.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 6.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 9.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          }
+        ],
+        "test": {
+          "auc": 0.825,
+          "f1": 0.8691,
+          "false_positive_rate": 0.1412,
+          "fn": 2275,
+          "fp": 61,
+          "precision": 0.9922,
+          "recall": 0.7732,
+          "tn": 371,
+          "tp": 7758
+        },
+        "threshold": 2.1335,
+        "validation": {
+          "f1": 0.9314,
+          "false_positive_rate": 0.05,
+          "fn": 1412,
+          "fp": 24,
+          "precision": 0.9975,
+          "recall": 0.8735,
+          "tn": 456,
+          "tp": 9753
+        }
+      },
+      "normal_model/basic": {
+        "abstained_share": {
+          "faulty": 0.1343,
+          "normal": 0.1343
+        },
+        "alarm_signals": [
+          {
+            "fault": "condenser_fouling",
+            "len": 1696,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "evaporator_fouling",
+            "len": 1870,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "fault_free",
+            "len": 192,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "len": 731,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "refrigerant_overcharge",
+            "len": 209,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "len": 1072,
+            "top_signal": "sat"
+          },
+          {
+            "fault": "suction_line_restriction",
+            "len": 1490,
+            "top_signal": "sat"
+          }
+        ],
+        "false_alarms_by_mode": [
+          {
+            "false_alarm_rate": 0.4444444444444444,
+            "mode": "cooling",
+            "windows": 432
+          }
+        ],
+        "recall_by_fault": [
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "condenser_fouling",
+            "intensity": 10.0,
+            "recall": 0.5671296296296297,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "condenser_fouling",
+            "intensity": 20.0,
+            "recall": 0.8564814814814815,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1388888888888889,
+            "fault": "condenser_fouling",
+            "intensity": 30.0,
+            "recall": 0.8425925925925926,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "condenser_fouling",
+            "intensity": 40.0,
+            "recall": 0.7916666666666666,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "condenser_fouling",
+            "intensity": 50.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 10.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 20.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 30.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 40.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "evaporator_fouling",
+            "intensity": 50.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "liquid_line_restriction",
+            "intensity": 1.0,
+            "recall": 0.006944444444444444,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "liquid_line_restriction",
+            "intensity": 4.0,
+            "recall": 0.20833333333333334,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1345707656612529,
+            "fault": "liquid_line_restriction",
+            "intensity": 8.0,
+            "recall": 0.6357308584686775,
+            "windows": 431
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "liquid_line_restriction",
+            "intensity": 10.0,
+            "recall": 0.8425925925925926,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_overcharge",
+            "intensity": 10.0,
+            "recall": 0.22916666666666666,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_overcharge",
+            "intensity": 15.0,
+            "recall": 0.04398148148148148,
+            "windows": 432
+          },
+          {
+            "abstained": 0.07142857142857142,
+            "fault": "refrigerant_overcharge",
+            "intensity": 20.0,
+            "recall": 0.9285714285714286,
+            "windows": 98
+          },
+          {
+            "abstained": 0.13657407407407407,
+            "fault": "refrigerant_undercharge",
+            "intensity": 10.0,
+            "recall": 0.7546296296296297,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "refrigerant_undercharge",
+            "intensity": 15.0,
+            "recall": 0.8657407407407407,
+            "windows": 432
+          },
+          {
+            "abstained": 0.1388888888888889,
+            "fault": "refrigerant_undercharge",
+            "intensity": 20.0,
+            "recall": 0.8611111111111112,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13425925925925927,
+            "fault": "suction_line_restriction",
+            "intensity": 1.0,
+            "recall": 0.8449074074074074,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 3.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 6.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          },
+          {
+            "abstained": 0.13194444444444445,
+            "fault": "suction_line_restriction",
+            "intensity": 9.0,
+            "recall": 0.8680555555555556,
+            "windows": 432
+          }
+        ],
+        "test": {
+          "auc": 0.7347,
+          "f1": 0.8174,
+          "false_positive_rate": 0.4444,
+          "fn": 2965,
+          "fp": 192,
+          "precision": 0.9736,
+          "recall": 0.7045,
+          "tn": 240,
+          "tp": 7068
+        },
+        "threshold": 1.0476,
+        "validation": {
+          "f1": 0.8499,
+          "false_positive_rate": 0.05,
+          "fn": 2896,
+          "fp": 24,
+          "precision": 0.9971,
+          "recall": 0.7406,
+          "tn": 456,
+          "tp": 8269
+        }
+      }
+    },
+    "windows": {
+      "test": {
+        "evaluable": 10465
+      },
+      "train": {
+        "evaluable": 34472
+      },
+      "val": {
+        "evaluable": 11645
+      }
+    }
+  },
+  "splits": {
+    "experimental": "leave one season out; threshold tuned on the next season; trained on the other two",
+    "simulated": {
+      "test": "days 82-100",
+      "train": "days 0-59",
+      "val": "days 61-80"
+    }
+  },
+  "window": "1h"
+}

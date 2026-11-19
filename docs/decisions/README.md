@@ -25,5 +25,6 @@ When a decision changes, write a new ADR that supersedes the old one. Don't rewr
 | [0018](0018-dataset-roles-and-dual-point-reporting.md) | Dataset roles and dual reporting (all points and basic points) | Accepted |
 | [0019](0019-point-mappings-as-toml-with-suggestions.md) | Point mappings as TOML files, with suggestions | Accepted |
 | [0020](0020-preprocessing-contract.md) | Preprocessing contract: no filling, steady state by delay, physics features only | Accepted |
+| [0021](0021-detection-methodology.md) | Detection methodology and Phase 3 results | Accepted |
 
 Template: copy [`template.md`](template.md).

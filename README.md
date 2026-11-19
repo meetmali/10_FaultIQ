@@ -114,6 +114,10 @@ cd pipeline && uv run python -m faultiq process ../my_export.csv --mapping ../my
 Every input gets a JSON report (accepted, accepted with warnings, or quarantined, and why). Outputs are
 Parquet files described in [docs/processed-data.md](docs/processed-data.md).
 
+Detection baselines (Phase 3) and their held-out results: [docs/detection-report.md](docs/detection-report.md)
+and [ADR 0021](docs/decisions/0021-detection-methodology.md). Rebuild them with
+`cd pipeline && uv run python -I ../scripts/detection_report.py ../data/processed/v0.2.0 --json ../docs/detection/results.json --out ../docs/detection-report.md`.
+
 ## Deploying (public demo or self-hosting)
 
 One production setup serves both purposes. Set `DEMO_MODE=true` for a read-only, sample-data demo, or `false`
