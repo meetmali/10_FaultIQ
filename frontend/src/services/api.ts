@@ -2,8 +2,13 @@ import type {
   AnalysisResponse,
   ChartSeries,
   DiagnosticResult,
+  EquipmentOverview,
   EquipmentResponse,
   FaultEventResponse,
+  FaultEventSummaryResponse,
+  FaultLibraryResponse,
+  LibraryFaultResponse,
+  SiteResponse,
   HealthResponse,
   Paged,
   PointSet,
@@ -61,6 +66,13 @@ export const getHealth = (signal?: AbortSignal) => request<HealthResponse>("/hea
 export const listEquipment = (query?: { site?: string; page?: number; page_size?: number }) =>
   request<Paged<EquipmentResponse>>("/equipment", { query });
 
+export const getEquipment = (id: string) => request<EquipmentResponse>(`/equipment/${encodeURIComponent(id)}`);
+
+export const getEquipmentOverview = (query?: { site?: string; page?: number; page_size?: number }) =>
+  request<Paged<EquipmentOverview>>("/equipment/overview", { query });
+
+export const listSites = () => request<SiteResponse[]>("/equipment/sites");
+
 export const createEquipment = (name: string, site?: string) =>
   request<EquipmentResponse>("/equipment", json({ name, site }));
 
@@ -96,6 +108,8 @@ export const getAnalysisSeries = (id: string, signal?: AbortSignal) =>
 export const listFaultEvents = (query?: {
   equipment_id?: string;
   analysis_id?: string;
+  site?: string;
+  review_status?: string;
   kind?: string;
   fault?: string;
   from?: string;
@@ -103,3 +117,20 @@ export const listFaultEvents = (query?: {
   page?: number;
   page_size?: number;
 }) => request<Paged<FaultEventResponse>>("/fault-events", { query });
+
+export const summariseFaultEvents = (query?: { equipment_id?: string; site?: string; from?: string; to?: string }) =>
+  request<FaultEventSummaryResponse>("/fault-events/summary", { query });
+
+/** Records a person's verdict on an event (ADR 0025). Blocked in demo mode by the API. */
+export const reviewFaultEvent = (id: string, status: string, note?: string) =>
+  request<FaultEventResponse>(`/fault-events/${encodeURIComponent(id)}/review`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ status, note: note ?? null }),
+  });
+
+export const listFaultLibrary = (query?: { q?: string; equipment?: string }) =>
+  request<FaultLibraryResponse>("/fault-library", { query });
+
+export const getFaultLibraryEntry = (id: string) =>
+  request<LibraryFaultResponse>(`/fault-library/${encodeURIComponent(id)}`);

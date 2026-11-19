@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "pipeline_version": "0.2.0",
   "diagnosis_version": "0.1.0",
   "source": "SA_temp_bias_2_Fall_2020.csv",
   "dataset": "experimental",
   "point_set": "all",
-  "period_start": "2020-09-24T00:00:00",
-  "period_end": "2020-09-24T23:59:00",
+  "period_start": "2020-09-24T00:00:00Z",
+  "period_end": "2020-09-24T23:59:00Z",
   "hours_total": 24,
   "hours_scored": 14,
   "hours_alarmed": 14,
@@ -19,8 +19,8 @@
   "events": [
     {
       "id": "event-1",
-      "start": "2020-09-24T08:00:00",
-      "end": "2020-09-24T22:00:00",
+      "start": "2020-09-24T08:00:00Z",
+      "end": "2020-09-24T22:00:00Z",
       "hours": 14,
       "kind": "inconclusive",
       "fault": null,
@@ -33,7 +33,21 @@
         "validation_precision": null,
         "detector_score": 19.9574,
         "detector_threshold": 14.6551,
-        "model_family": "logistic"
+        "model_family": "logistic",
+        "alternatives": [
+          {
+            "fault": "sat_sensor_bias",
+            "probability": 0.8804
+          },
+          {
+            "fault": "fault_free",
+            "probability": 0.0775
+          },
+          {
+            "fault": "oa_damper_stuck",
+            "probability": 0.0421
+          }
+        ]
       },
       "context": {
         "running": "supply fan",

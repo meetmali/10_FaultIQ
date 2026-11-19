@@ -178,3 +178,42 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20261119092408_AddFaultEventReview') THEN
+    ALTER TABLE fault_events ADD review_note character varying(1000);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20261119092408_AddFaultEventReview') THEN
+    ALTER TABLE fault_events ADD review_status character varying(20) NOT NULL DEFAULT 'unreviewed';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20261119092408_AddFaultEventReview') THEN
+    ALTER TABLE fault_events ADD reviewed_at timestamp with time zone;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20261119092408_AddFaultEventReview') THEN
+    ALTER TABLE fault_events ADD CONSTRAINT ck_fault_events_review_status CHECK (review_status IN ('unreviewed', 'needs_review', 'confirmed', 'rejected'));
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20261119092408_AddFaultEventReview') THEN
+    INSERT INTO "__EFMigrationsHistory" (migration_id, product_version)
+    VALUES ('20261119092408_AddFaultEventReview', '10.0.14');
+    END IF;
+END $EF$;
+COMMIT;
+

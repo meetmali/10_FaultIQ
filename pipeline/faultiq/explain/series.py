@@ -74,7 +74,11 @@ def build_series(
     events: dict[str, Any] = {}
     for event in sorted(result.events, key=lambda e: e.hours, reverse=True)[:MAX_EVENTS]:
         window = minutes.filter(
-            pl.col("timestamp").is_between(event.start - EVENT_PADDING, event.end + EVENT_PADDING)
+            # Minute data is naive (as recorded); event times are the same numbers marked UTC.
+            pl.col("timestamp").is_between(
+                event.start.replace(tzinfo=None) - EVENT_PADDING,
+                event.end.replace(tzinfo=None) + EVENT_PADDING,
+            )
         )
         signals: dict[str, Any] = {}
         for ev in event.evidence:

@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "pipeline_version": "0.2.0",
   "diagnosis_version": "0.1.0",
   "source": "RTU_sim_condfouling20.csv",
   "dataset": "simulated",
   "point_set": "all",
-  "period_start": "2018-10-10T00:00:00",
-  "period_end": "2018-10-28T00:00:00",
+  "period_start": "2018-10-10T00:00:00Z",
+  "period_end": "2018-10-28T00:00:00Z",
   "hours_total": 433,
   "hours_scored": 432,
   "hours_alarmed": 373,
@@ -22,8 +22,8 @@
   "events": [
     {
       "id": "event-3",
-      "start": "2018-10-11T07:00:00",
-      "end": "2018-10-15T01:00:00",
+      "start": "2018-10-11T07:00:00Z",
+      "end": "2018-10-15T01:00:00Z",
       "hours": 90,
       "kind": "fault",
       "fault": "condenser_fouling",
@@ -36,7 +36,21 @@
         "validation_precision": 0.9569,
         "detector_score": 8.2643,
         "detector_threshold": 2.1335,
-        "model_family": "lightgbm"
+        "model_family": "lightgbm",
+        "alternatives": [
+          {
+            "fault": "condenser_fouling",
+            "probability": 0.9975
+          },
+          {
+            "fault": "liquid_line_restriction",
+            "probability": 0.0025
+          },
+          {
+            "fault": "refrigerant_undercharge",
+            "probability": 0.0
+          }
+        ]
       },
       "context": {
         "running": "compressor",

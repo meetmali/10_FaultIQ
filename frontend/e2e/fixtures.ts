@@ -1,0 +1,98 @@
+// Recorded API responses for the CI journey (ADR 0025). Built from files already committed: the
+// Phase 5 example explanation and the generated fault library. Chart series are synthetic, so no
+// LBNL sensor values are committed (the dataset is downloaded under its own terms).
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import type { Page, Route } from "@playwright/test";
+
+const root = (p: string) => fileURLToPath(new URL(`../../${p}`, import.meta.url));
+const result = JSON.parse(readFileSync(root("docs/explanations/examples/simulated-condenser-fouling.json"), "utf8"));
+const library = JSON.parse(readFileSync(root("api/src/FaultIQ.Api/FaultLibrary/fault-library.json"), "utf8"));
+
+export const EQUIPMENT_ID = "0190a1f3-0000-7000-8000-000000000001";
+export const ANALYSIS_ID = "0190a1f3-0000-7000-8000-000000000002";
+export const event = result.events[0];
+export const faultTitle: string = library.faults.find((f: { id: string }) => f.id === event.fault).title;
+
+const at = (iso: string) => new Date(iso.endsWith("Z") || iso.includes("+") ? iso : `${iso}Z`).getTime();
+
+function wave(start: number, hours: number, base: number, amp: number) {
+  const t: number[] = [];
+  const v: number[] = [];
+  for (let i = 0; i <= hours * 4; i++) {
+    t.push(start + i * 15 * 60_000);
+    v.push(Math.round((base + amp * Math.sin(i / 8)) * 100) / 100);
+  }
+  return { t, v };
+}
+
+function series() {
+  const start = at(result.period_start ?? event.start) ;
+  const overview = Object.fromEntries(
+    [["oat", "outdoor-air temperature", 20, 6], ["rat", "return-air temperature", 24, 1], ["sat", "supply-air temperature", 12, 2]].map(
+      ([k, label, base, amp]) => [k, { label, unit: "degC", ...wave(start, 24 * 20, base as number, amp as number) }],
+    ),
+  );
+  const s = at(event.start);
+  const e = at(event.end);
+  const signals = Object.fromEntries(
+    event.evidence.map((ev: { id: string; signal: string; unit: string; kind: string; observed: number }) => {
+      const w = wave(s - 2 * 3_600_000, (e - s) / 3_600_000 + 4, ev.observed, ev.observed * 0.02);
+      return [ev.id, { label: ev.signal, unit: ev.unit, t: w.t, observed: w.v, ...(ev.kind === "residual" ? { expected: w.v.map((x) => x * 0.96) } : {}) }];
+    }),
+  );
+  return { version: 1, overview, events: { [event.id]: { start: s, end: e, signals } } };
+}
+
+const analysis = {
+  id: ANALYSIS_ID, upload_id: "0190a1f3-0000-7000-8000-000000000003", equipment_id: EQUIPMENT_ID, point_set: "all",
+  status: "succeeded", attempts: 1, created_at: "2026-11-19T09:31:00Z", started_at: "2026-11-19T09:31:01Z",
+  finished_at: "2026-11-19T09:31:06Z", error_code: null, error_message: null, pipeline_version: result.pipeline_version,
+  model_version: "lbnl_simulated-all@diagnosis-0.1.0+fixture", hours_total: result.hours_total, hours_scored: result.hours_scored,
+  hours_alarmed: result.hours_alarmed, event_count: result.events.length,
+};
+
+const eventRows = result.events.map((ev: { id: string; kind: string; fault: string | null; start: string; end: string; hours: number; model: { confidence: number | null; detector_score: number } }, i: number) => ({
+  id: `0190a1f3-0000-7000-8000-0000000001${String(i).padStart(2, "0")}`, analysis_id: ANALYSIS_ID, equipment_id: EQUIPMENT_ID,
+  event_key: ev.id, kind: ev.kind, fault: ev.fault, starts_at: ev.start, ends_at: ev.end, hours: ev.hours,
+  confidence: ev.model.confidence, detector_score: ev.model.detector_score, review_status: "unreviewed", review_note: null, reviewed_at: null,
+}));
+
+const page = <T>(items: T[]) => ({ items, page: 1, page_size: 20, total: items.length });
+
+/** Answers every /api/v1 call the journey makes. `demo` turns on demo mode. */
+export async function mockApi(p: Page, { demo = false, failOverview = false } = {}) {
+  const json = (route: Route, body: unknown, status = 200) =>
+    route.fulfill({ status, contentType: status >= 400 ? "application/problem+json" : "application/json", body: JSON.stringify(body) });
+
+  await p.route("**/api/v1/**", (route) => {
+    const url = new URL(route.request().url());
+    const path = url.pathname.replace("/api/v1", "");
+    if (path === "/health") return json(route, { status: "ok", service: "api", api_version: "0.1.0", environment: "test", demo_mode: demo, timestamp: "2026-11-19T00:00:00Z" });
+    if (path === "/equipment/overview") {
+      if (failOverview) return json(route, { status: 500, code: "internal_error", detail: "An unexpected error occurred." }, 500);
+      return json(route, page([{
+        id: EQUIPMENT_ID, name: "RTU-1", site: "Simulated office", status: "fault", latest_analysis_id: ANALYSIS_ID,
+        latest_analysis_status: "succeeded", latest_analysis_at: analysis.finished_at, hours_scored: result.hours_scored,
+        hours_alarmed: result.hours_alarmed, fault_events: 1, other_events: 0, top_fault: event.fault,
+      }]));
+    }
+    if (path === "/equipment/sites") return json(route, [{ site: "Simulated office", equipment: 1 }]);
+    if (path === `/equipment/${EQUIPMENT_ID}`) return json(route, { id: EQUIPMENT_ID, name: "RTU-1", site: "Simulated office", created_at: "2026-11-19T09:30:00Z" });
+    if (path === "/analyses") return json(route, page([analysis]));
+    if (path === `/analyses/${ANALYSIS_ID}`) return json(route, analysis);
+    if (path === `/analyses/${ANALYSIS_ID}/result`) return json(route, result);
+    if (path === `/analyses/${ANALYSIS_ID}/series`) return json(route, series());
+    if (path === "/fault-events/summary") return json(route, { items: [{ kind: event.kind, fault: event.fault, events: 1, hours: event.hours }], events: 1, hours: event.hours });
+    if (path === "/fault-events") return json(route, page(eventRows));
+    if (path === "/fault-library") return json(route, { review_status: library.review_status, sources: library.sources, items: library.faults });
+    if (path.startsWith("/fault-library/")) {
+      const fault = library.faults.find((f: { id: string }) => f.id === path.split("/").pop());
+      return fault
+        ? json(route, { review_status: library.review_status, fault, sources: library.sources })
+        : json(route, { status: 404, code: "not_found", detail: "Fault was not found." }, 404);
+    }
+    return json(route, { status: 404, code: "not_found", detail: `No fixture for ${path}` }, 404);
+  });
+}

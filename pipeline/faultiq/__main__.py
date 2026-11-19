@@ -4,6 +4,7 @@ python -m faultiq process-lbnl <raw-root> [--out DIR]
 python -m faultiq process <file.csv> --mapping <mapping.toml> [--out DIR]
 python -m faultiq draft-mapping <file.csv> [--name NAME]
 python -m faultiq train-models <processed-dir> [--out DIR]
+python -m faultiq export-library <diagnosis-results.json> --out FILE
 """
 
 from __future__ import annotations
@@ -44,8 +45,22 @@ def main(argv: list[str] | None = None) -> int:
     p_models.add_argument("processed", type=Path)
     p_models.add_argument("--out", type=Path, default=Path("models"))
 
+    p_lib = sub.add_parser("export-library", help="write the fault library the API serves")
+    p_lib.add_argument("results", type=Path, help="docs/diagnosis/results.json")
+    p_lib.add_argument("--out", type=Path, required=True)
+
     args = parser.parse_args(argv)
     configure_logging(args.log_level)
+
+    if args.command == "export-library":
+        import json
+
+        from faultiq.explain.library import fault_library
+        from faultiq.explain.library_export import library_json
+
+        args.out.write_text(library_json(fault_library(), json.loads(args.results.read_text())))
+        print(f"Wrote {args.out}")
+        return 0
 
     if args.command == "train-models":
         from faultiq.explain.models import train_models  # heavy imports only when needed

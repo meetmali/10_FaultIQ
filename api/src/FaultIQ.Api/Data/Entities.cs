@@ -81,6 +81,18 @@ public sealed class FaultEvent
     public int Hours { get; set; }
     public double? Confidence { get; set; }
     public double DetectorScore { get; set; }
+
+    /// <summary>A person's verdict on the event (ADR 0025). Defaults to unreviewed.</summary>
+    public string ReviewStatus { get; set; } = ReviewStatuses.Unreviewed;
+
+    public string? ReviewNote { get; set; }
+    public DateTimeOffset? ReviewedAt { get; set; }
+}
+
+public static class ReviewStatuses
+{
+    public const string Unreviewed = "unreviewed";
+    public static readonly string[] All = [Unreviewed, "needs_review", "confirmed", "rejected"];
 }
 
 public static class AnalysisStatus

@@ -69,6 +69,9 @@ public sealed class FaultIqDbContext(DbContextOptions<FaultIqDbContext> options)
             e.Property(x => x.EventKey).HasMaxLength(50);
             e.Property(x => x.Kind).HasMaxLength(30);
             e.Property(x => x.Fault).HasMaxLength(100);
+            // The worker inserts events without review fields, so the database supplies the default.
+            e.Property(x => x.ReviewStatus).HasMaxLength(20).HasDefaultValue(ReviewStatuses.Unreviewed);
+            e.Property(x => x.ReviewNote).HasMaxLength(1000);
             e.HasOne<Analysis>().WithMany().HasForeignKey(x => x.AnalysisId)
                 .OnDelete(DeleteBehavior.Cascade);
             e.HasOne<Equipment>().WithMany().HasForeignKey(x => x.EquipmentId)
@@ -81,6 +84,7 @@ public sealed class FaultIqDbContext(DbContextOptions<FaultIqDbContext> options)
                 t.HasCheckConstraint("ck_fault_events_kind", Sql.In("kind", EventKinds.All));
                 t.HasCheckConstraint("ck_fault_events_span", "ends_at > starts_at");
                 t.HasCheckConstraint("ck_fault_events_hours", "hours > 0");
+                t.HasCheckConstraint("ck_fault_events_review_status", Sql.In("review_status", ReviewStatuses.All));
             });
         });
     }

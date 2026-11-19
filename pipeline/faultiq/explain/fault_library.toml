@@ -1,7 +1,11 @@
 # FaultIQ fault library (ADR 0023).
 #
-# One entry per supported fault: a plain title and 2-3 checks a technician can do on site. Every
-# check names the source it is taken from. Citations are to whole documents, not clauses.
+# One entry per supported fault: a title, how the fault is defined in the reference data, what FaultIQ
+# measured for it, likely real-world causes, and 2-3 checks a technician can do on site. Every text
+# names the source it is taken from. Citations are to whole documents, not clauses.
+#
+# Symptoms, "often confused with" and per-severity results are not written here: `export-library`
+# derives them from FaultIQ's held-out diagnosis results, so they are measured, not asserted.
 #
 # review_status stays "unreviewed" until an HVAC professional has checked every entry against the
 # cited documents. The UI must show that status next to any recommended check.
@@ -21,8 +25,24 @@ citation = "California Building Energy Efficiency Standards (Title 24, Part 6), 
 citation = "Lawrence Berkeley National Laboratory, Fault Detection and Diagnostics Data Sets: rooftop unit (fault definitions and how each was imposed)"
 url = "https://faultdetection.lbl.gov/dataset/rtu/"
 
+[sources.faultiq-eda]
+citation = "FaultIQ dataset card: Phase 1 comparison of each fault with the fault-free baseline at identical conditions (docs/dataset-card.md)"
+url = "https://github.com/meetmali/FaultIQ/blob/main/docs/dataset-card.md"
+
+[sources.faultiq-diagnosis]
+citation = "FaultIQ diagnosis report: held-out test results, diagnosis 0.1.0 (docs/diagnosis-report.md)"
+url = "https://github.com/meetmali/FaultIQ/blob/main/docs/diagnosis-report.md"
+
 [faults.condenser_fouling]
 title = "Condenser fouling"
+equipment = "Refrigerant circuit"
+intensity_unit = "% condenser airflow reduction"
+definition = { text = "Modelled as reduced condenser fan mass flow, 10% to 50% in five levels.", source = "lbnl-rtu" }
+observed = { text = "Discharge pressure 35 to 358 kPa higher, discharge temperature up to 11 °C higher and compressor power 75 to 693 W higher than the fault-free unit at the same conditions. Supply air moves by 0.4 °C at most, so basic BAS points barely see it.", source = "faultiq-eda" }
+causes = [
+  { text = "Dirt, debris or vegetation blocking the condenser coil.", source = "ashrae-180" },
+  { text = "A condenser fan that has failed or runs slowly.", source = "ashrae-180" },
+]
 checks = [
   { text = "Inspect the condenser coil for dirt, debris or blockage and clean it if needed.", source = "ashrae-180" },
   { text = "Confirm the condenser fans run and nothing obstructs airflow across the coil.", source = "ashrae-180" },
@@ -30,6 +50,15 @@ checks = [
 
 [faults.evaporator_fouling]
 title = "Evaporator fouling (low indoor airflow)"
+equipment = "Refrigerant circuit"
+intensity_unit = "% evaporator airflow reduction"
+definition = { text = "Modelled as reduced evaporator fan mass flow, 10% to 50% in five levels.", source = "lbnl-rtu" }
+observed = { text = "Supply air 1.0 to 7.3 °C colder and suction pressure 32 to 198 kPa lower than the fault-free unit, scaling with severity. Visible with basic BAS points through supply-air temperature.", source = "faultiq-eda" }
+causes = [
+  { text = "Loaded air filters.", source = "ashrae-180" },
+  { text = "A dirty evaporator coil.", source = "ashrae-180" },
+  { text = "A slipping belt or weak supply fan reducing airflow.", source = "ashrae-180" },
+]
 checks = [
   { text = "Inspect the air filters and replace them if they are loaded.", source = "ashrae-180" },
   { text = "Inspect the evaporator coil for dirt and clean it if needed.", source = "ashrae-180" },
@@ -38,6 +67,14 @@ checks = [
 
 [faults.liquid_line_restriction]
 title = "Liquid-line restriction"
+equipment = "Refrigerant circuit"
+intensity_unit = "bar pressure drop"
+definition = { text = "Modelled as a pressure drop after the condenser outlet: 1, 4, 8 and 10 bar.", source = "lbnl-rtu" }
+observed = { text = "Small until 8 to 10 bar; at 10 bar suction superheat rises by 8.4 K and the compressor runs only 67% of the time.", source = "faultiq-eda" }
+causes = [
+  { text = "A clogged liquid-line filter drier.", source = "ashrae-180" },
+  { text = "A kinked or damaged liquid line.", source = "ashrae-180" },
+]
 checks = [
   { text = "Have a qualified technician measure refrigerant pressures and temperatures, including across the liquid-line filter drier.", source = "ashrae-180" },
   { text = "Compare the pattern with how the restriction is defined in the reference data set.", source = "lbnl-rtu" },
@@ -45,6 +82,14 @@ checks = [
 
 [faults.suction_line_restriction]
 title = "Suction-line restriction"
+equipment = "Refrigerant circuit"
+intensity_unit = "bar pressure drop"
+definition = { text = "Modelled as a pressure drop after the evaporator outlet: 1, 3, 6 and 9 bar.", source = "lbnl-rtu" }
+observed = { text = "Supply air up to 7.5 °C warmer, the compressor running 95% to 100% of the time from 3 bar, and capacity down by up to 7.6 kW. Visible with basic BAS points from 3 bar.", source = "faultiq-eda" }
+causes = [
+  { text = "A kinked or crushed suction line.", source = "ashrae-180" },
+  { text = "A blocked suction-line filter, where one is fitted.", source = "ashrae-180" },
+]
 checks = [
   { text = "Have a qualified technician measure suction pressure and temperature and inspect the suction line for kinks or damage.", source = "ashrae-180" },
   { text = "Compare the pattern with how the restriction is defined in the reference data set.", source = "lbnl-rtu" },
@@ -52,12 +97,27 @@ checks = [
 
 [faults.refrigerant_overcharge]
 title = "Refrigerant overcharge"
+equipment = "Refrigerant circuit"
+intensity_unit = "% overcharge"
+definition = { text = "Modelled as a lower refrigerant enthalpy: 10%, 15% and 20% overcharge.", source = "lbnl-rtu" }
+observed = { text = "Not monotonic with severity: discharge pressure changed by -99, +9 and +3 kPa at 10%, 15% and 20%. Only the 20% level shows with basic points (zone 1.6 °C cooler).", source = "faultiq-eda" }
+causes = [
+  { text = "Too much refrigerant added during installation or service.", source = "ashrae-180" },
+]
 checks = [
   { text = "Have a qualified technician verify the refrigerant charge using the manufacturer's charging method.", source = "ashrae-180" },
 ]
 
 [faults.refrigerant_undercharge]
 title = "Refrigerant undercharge"
+equipment = "Refrigerant circuit"
+intensity_unit = "% undercharge"
+definition = { text = "Modelled as a higher refrigerant enthalpy: 10%, 15% and 20% undercharge.", source = "lbnl-rtu" }
+observed = { text = "Small: suction pressure 3 to 22 kPa higher and discharge pressure 3 to 33 kPa lower. The simulated suction pressure rises, the opposite of typical field behaviour, which is a sim-to-real risk.", source = "faultiq-eda" }
+causes = [
+  { text = "A refrigerant leak.", source = "ashrae-180" },
+  { text = "Too little refrigerant added during installation or service.", source = "ashrae-180" },
+]
 checks = [
   { text = "Have a qualified technician verify the refrigerant charge using the manufacturer's charging method.", source = "ashrae-180" },
   { text = "Have the refrigerant circuit checked for leaks before any charge is added.", source = "ashrae-180" },
@@ -65,6 +125,15 @@ checks = [
 
 [faults.oa_damper_stuck]
 title = "Outdoor-air damper stuck"
+equipment = "Economizer and controls"
+intensity_unit = "% open"
+definition = { text = "Imposed through the damper control signal: stuck at 5%, 10%, 50% and 100% open.", source = "lbnl-rtu" }
+observed = { text = "Outdoor-air fraction about 0.86 to 0.91 when stuck fully open and 0.48 to 0.57 at 50%, against 0.21 to 0.40 fault-free. Stuck at 5% or 10% looks like a damper resting at its minimum position.", source = "faultiq-eda" }
+causes = [
+  { text = "A failed damper actuator.", source = "ashrae-180" },
+  { text = "A broken or slipped linkage between actuator and damper.", source = "ashrae-180" },
+  { text = "Damper blades seized by corrosion or debris.", source = "ashrae-180" },
+]
 checks = [
   { text = "Command the outdoor-air damper through its full range and confirm it follows the command.", source = "title24-econ-fdd" },
   { text = "Inspect the damper blades, linkage and actuator.", source = "ashrae-180" },
@@ -72,6 +141,13 @@ checks = [
 
 [faults.economizer_setpoint_offset]
 title = "Economizer setpoint offset"
+equipment = "Economizer and controls"
+intensity_unit = "°C offset from the 10 °C setpoint"
+definition = { text = "The economizer enable setpoint offset by -4, -2, +2 and +4 °C from the correct 10 °C.", source = "lbnl-rtu" }
+observed = { text = "Inconsistent across seasons on daily medians. Only hours with outdoor air between the correct and the wrong setpoint can show it, so held-out evidence is thin.", source = "faultiq-eda" }
+causes = [
+  { text = "A high-limit setpoint entered incorrectly at commissioning or changed later.", source = "title24-econ-fdd" },
+]
 checks = [
   { text = "Compare the economizer high-limit setpoint in the controller with the design control sequence.", source = "title24-econ-fdd" },
   { text = "Review the economizer enable logic against the documented sequence of operation.", source = "ashrae-g36" },
@@ -79,6 +155,14 @@ checks = [
 
 [faults.sat_sensor_bias]
 title = "Supply-air temperature sensor bias"
+equipment = "Sensors"
+intensity_unit = "°C bias"
+definition = { text = "The supply-air temperature reading biased by -4, -2, +2 and +4 °C; the recorded value is the biased one.", source = "lbnl-rtu" }
+observed = { text = "Hides itself: the controller holds the biased reading at its setpoint, so median supply air reads about 13 °C in every bias file. It shows only against an independent reading, such as the VAV box discharge temperatures.", source = "faultiq-eda" }
+causes = [
+  { text = "A supply-air sensor that has drifted out of calibration.", source = "ashrae-180" },
+  { text = "A sensor installed where it doesn't see well-mixed supply air.", source = "ashrae-g36" },
+]
 checks = [
   { text = "Check the supply-air temperature sensor against a calibrated reference thermometer.", source = "ashrae-180" },
   { text = "Compare the unit's supply-air reading with the VAV box discharge readings.", source = "ashrae-g36" },

@@ -29,5 +29,6 @@ When a decision changes, write a new ADR that supersedes the old one. Don't rewr
 | [0022](0022-diagnosis-methodology.md) | Diagnosis methodology and Phase 4 results | Accepted |
 | [0023](0023-explanations.md) | Evidence-grounded explanations and the diagnostic result contract | Accepted |
 | [0024](0024-api-persistence-and-jobs.md) | API, persistence and the analysis job loop | Accepted |
+| [0025](0025-frontend-screens.md) | Frontend screens, fault library content and human review | Accepted |
 
 Template: copy [`template.md`](template.md).

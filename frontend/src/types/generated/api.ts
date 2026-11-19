@@ -36,22 +36,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/fault-events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ListFaultEvents"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/equipment": {
         parameters: {
             query?: never;
@@ -62,6 +46,38 @@ export interface paths {
         get: operations["ListEquipment"];
         put?: never;
         post: operations["CreateEquipment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/equipment/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetEquipmentOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/equipment/sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListSites"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -180,6 +196,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/fault-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListFaultEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fault-events/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SummariseFaultEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fault-events/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetFaultEvent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fault-events/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ReviewFaultEvent"];
+        trace?: never;
+    };
+    "/api/v1/fault-library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListFaultLibrary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fault-library/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetFaultLibraryEntry"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -214,6 +326,17 @@ export interface components {
             /** Format: int32 */
             event_count: null | number;
         };
+        CitedText: {
+            text: string;
+            source: string;
+        };
+        Confusion: {
+            fault: string;
+            /** Format: int32 */
+            named_as_other_hours: number;
+            /** Format: int32 */
+            other_named_as_this_hours: number;
+        };
         CreateAnalysisRequest: {
             /** Format: uuid */
             upload_id: string;
@@ -222,6 +345,27 @@ export interface components {
         CreateEquipmentRequest: {
             name: string;
             site: null | string;
+        };
+        EquipmentOverview: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            site: null | string;
+            status: string;
+            /** Format: uuid */
+            latest_analysis_id: null | string;
+            latest_analysis_status: null | string;
+            /** Format: date-time */
+            latest_analysis_at: null | string;
+            /** Format: int32 */
+            hours_scored: null | number;
+            /** Format: int32 */
+            hours_alarmed: null | number;
+            /** Format: int32 */
+            fault_events: number;
+            /** Format: int32 */
+            other_events: number;
+            top_fault: null | string;
         };
         EquipmentResponse: {
             /** Format: uuid */
@@ -251,6 +395,45 @@ export interface components {
             confidence: null | number;
             /** Format: double */
             detector_score: number;
+            review_status: string;
+            review_note: null | string;
+            /** Format: date-time */
+            reviewed_at: null | string;
+        };
+        FaultEventSummaryItem: {
+            kind: string;
+            fault: null | string;
+            /** Format: int32 */
+            events: number;
+            /** Format: int32 */
+            hours: number;
+        };
+        FaultEventSummaryResponse: {
+            items: components["schemas"]["FaultEventSummaryItem"][];
+            /** Format: int32 */
+            events: number;
+            /** Format: int32 */
+            hours: number;
+        };
+        FaultLibraryResponse: {
+            review_status: string;
+            sources: components["schemas"]["LibrarySource"][];
+            items: components["schemas"]["LibraryFault"][];
+        };
+        FaultMeasurements: {
+            source: string;
+            symptoms: components["schemas"]["Symptom"][];
+            confused_with: components["schemas"]["Confusion"][];
+            performance: components["schemas"]["FaultPerformance"];
+        };
+        FaultPerformance: {
+            /** Format: int32 */
+            test_hours: number;
+            /** Format: double */
+            precision: number;
+            /** Format: double */
+            recall: number;
+            by_severity: components["schemas"]["SeverityResult"][];
         };
         HealthResponse: {
             status: string;
@@ -263,8 +446,40 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: string;
+        LibraryFault: {
+            id: string;
+            title: string;
+            equipment: string;
+            dataset: string;
+            dataset_label: string;
+            intensity_unit: string;
+            definition: null | components["schemas"]["CitedText"];
+            observed: null | components["schemas"]["CitedText"];
+            causes: components["schemas"]["CitedText"][];
+            checks: components["schemas"]["CitedText"][];
+            measured: components["schemas"]["FaultMeasurements"];
+        };
+        LibraryFaultResponse: {
+            review_status: string;
+            fault: components["schemas"]["LibraryFault"];
+            sources: components["schemas"]["LibrarySource"][];
+        };
+        LibrarySource: {
+            id: string;
+            citation: string;
+            url: null | string;
+        };
         PagedResultOfAnalysisResponse: {
             items: components["schemas"]["AnalysisResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            page_size: number;
+            /** Format: int32 */
+            total: number;
+        };
+        PagedResultOfEquipmentOverview: {
+            items: components["schemas"]["EquipmentOverview"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -305,6 +520,35 @@ export interface components {
             };
             /** Format: date-time */
             timestamp: string;
+        };
+        ReviewRequest: {
+            status: string;
+            note: null | string;
+        };
+        SeverityResult: {
+            /** Format: double */
+            intensity: number;
+            /** Format: int32 */
+            hours: number;
+            /** Format: double */
+            right_fault: number;
+            /** Format: double */
+            said_no_fault: number;
+            /** Format: double */
+            inconclusive: number;
+        };
+        SiteResponse: {
+            site: string;
+            /** Format: int32 */
+            equipment: number;
+        };
+        Symptom: {
+            feature: string;
+            signal: string;
+            unit: string;
+            kind: string;
+            /** Format: int32 */
+            deciding_hours: number;
         };
         UploadResponse: {
             /** Format: uuid */
@@ -377,35 +621,6 @@ export interface operations {
             };
         };
     };
-    ListFaultEvents: {
-        parameters: {
-            query?: {
-                equipment_id?: string;
-                analysis_id?: string;
-                kind?: string;
-                fault?: string;
-                from?: string;
-                to?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PagedResultOfFaultEventResponse"];
-                };
-            };
-        };
-    };
     ListEquipment: {
         parameters: {
             query?: {
@@ -450,6 +665,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EquipmentResponse"];
+                };
+            };
+        };
+    };
+    GetEquipmentOverview: {
+        parameters: {
+            query?: {
+                site?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResultOfEquipmentOverview"];
+                };
+            };
+        };
+    };
+    ListSites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteResponse"][];
                 };
             };
         };
@@ -672,6 +931,155 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListFaultEvents: {
+        parameters: {
+            query?: {
+                equipment_id?: string;
+                analysis_id?: string;
+                site?: string;
+                kind?: string;
+                fault?: string;
+                review_status?: string;
+                from?: string;
+                to?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResultOfFaultEventResponse"];
+                };
+            };
+        };
+    };
+    SummariseFaultEvents: {
+        parameters: {
+            query?: {
+                equipment_id?: string;
+                site?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FaultEventSummaryResponse"];
+                };
+            };
+        };
+    };
+    GetFaultEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FaultEventResponse"];
+                };
+            };
+        };
+    };
+    ReviewFaultEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FaultEventResponse"];
+                };
+            };
+        };
+    };
+    ListFaultLibrary: {
+        parameters: {
+            query?: {
+                q?: string;
+                equipment?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FaultLibraryResponse"];
+                };
+            };
+        };
+    };
+    GetFaultLibraryEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryFaultResponse"];
                 };
             };
         };

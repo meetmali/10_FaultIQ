@@ -14,6 +14,7 @@ its label. Labels are used only to train and to evaluate.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +29,6 @@ from faultiq.detection.windows import (
     MIN_MINUTES,
     SIM_BLOCKS,
     SIM_START,
-    WINDOW_KEYS,
     add_minute_context,
     season_fold,
     sim_split,
@@ -52,11 +52,12 @@ from faultiq.explain import evidence as ev
 from faultiq.explain.check import ExplanationError, check_result
 from faultiq.explain.library import FaultLibrary, fault_library
 from faultiq.explain.narrate import statements
-from faultiq.explain.schema import DiagnosticResult, FaultEvent, ModelOutput
+from faultiq.explain.schema import Alternative, DiagnosticResult, FaultEvent, ModelOutput
 
 # Model family per dataset, as adopted on validation data in ADR 0022 (frozen with diagnosis 0.1.0).
 ADOPTED = {"simulated": "lightgbm", "experimental": "logistic"}
 RUNNING = {"simulated": "compressor", "experimental": "supply fan"}
+TOP_ALTERNATIVES = 3
 REQUIRED_COLUMNS = ("timestamp", "steady", "operating_mode", "fan_on", "compressor_on")
 
 
@@ -188,13 +189,23 @@ def fit_experimental_roles(
     )  # fmt: skip
 
 
+def as_recorded(t: datetime | None) -> datetime | None:
+    """Source timestamps carry no time zone, and point mappings don't declare one yet. They are
+    kept exactly as recorded and marked UTC, so every consumer reads the same wall-clock numbers
+    (a naive time would be shifted by each reader's local zone). ADR 0025."""
+    return None if t is None else t.replace(tzinfo=UTC) if t.tzinfo is None else t
+
+
 def unlabelled(source: str) -> dict[str, object]:
     """Minute context for explaining a file: the label is unknown by design."""
     return {"source_name": source, "fault": "unknown", "intensity": None, "season": None}
 
 
-def score_hours(minutes: pl.DataFrame, diag: Diagnoser) -> tuple[pl.DataFrame, np.ndarray]:
-    """Steps 2-4: hourly context, detector alarm and diagnosis answer, plus contributions."""
+def score_hours(
+    minutes: pl.DataFrame, diag: Diagnoser
+) -> tuple[pl.DataFrame, np.ndarray, np.ndarray]:
+    """Steps 2-4: hourly context, detector alarm and diagnosis answer, plus contributions and
+    class probabilities."""
     hours = build_windows(minutes, diag.dataset, diag.models, diag.rules).sort("window_start")
     cols = diag.columns
     x = matrix(hours, cols)
@@ -212,7 +223,7 @@ def score_hours(minutes: pl.DataFrame, diag: Diagnoser) -> tuple[pl.DataFrame, n
         alarm=predict(hours[f"detect:{diag.point_set}"], diag.detector_threshold)
         & pl.col("scored"),
     )
-    return hours, contrib
+    return hours, contrib, proba
 
 
 def _kind(answer: str) -> str:
@@ -229,6 +240,7 @@ def _event(
     answer: str,
     hours: pl.DataFrame,
     contrib: np.ndarray,
+    proba: np.ndarray,
     minutes: pl.DataFrame,
     diag: Diagnoser,
     library: FaultLibrary,
@@ -250,7 +262,16 @@ def _event(
         )  # fmt: skip
     else:
         evidence = ev.detector_evidence(em, steady, diag.models[diag.point_set], diag.ranges)
+    alternatives: list[Alternative] = []
+    if kind != "not_diagnosable" and len(proba):
+        # Mean probability of every class over the event's hours: the "possible alternatives".
+        mean = proba[rows].mean(axis=0)
+        alternatives = [
+            Alternative(fault=str(diag.classifier.classes[i]), probability=round(float(mean[i]), 4))
+            for i in np.argsort(-mean)[:TOP_ALTERNATIVES]
+        ]
     model = ModelOutput(
+        alternatives=alternatives,
         answer=answer if kind == "fault" else kind,
         top_class=None if kind == "not_diagnosable" else str(top_class),
         confidence=None if kind == "not_diagnosable" else round(float(conf or 0.0), 4),  # type: ignore[arg-type]
@@ -261,8 +282,8 @@ def _event(
         model_family=diag.classifier.family,
     )
     ctx = ev.context(em, diagnosable, RUNNING[diag.dataset])
-    start = eh["window_start"].min()
-    end = eh["window_start"].max() + ev.HOUR  # type: ignore[operator]
+    start = as_recorded(eh["window_start"].min())  # type: ignore[arg-type]
+    end = as_recorded(eh["window_start"].max() + ev.HOUR)  # type: ignore[operator,arg-type]
     return FaultEvent(
         id=f"event-{n}", start=start, end=end, hours=eh.height, kind=kind,
         fault=fault, fault_title=library.title(fault) if fault else None,
@@ -281,10 +302,10 @@ def explain(
         raise ValueError(f"{source}: not a processed file, missing {missing}")
     library = library or fault_library()
     minutes = add_minute_context(minutes, unlabelled(source))
-    hours, contrib = score_hours(minutes, diag)
+    hours, contrib, proba = score_hours(minutes, diag)
     groups = ev.group_events(hours)
     events = [
-        _event(i + 1, g.rows, g.answer, hours, contrib, minutes, diag, library)
+        _event(i + 1, g.rows, g.answer, hours, contrib, proba, minutes, diag, library)
         for i, g in enumerate(groups)
     ]
     cited = sorted({c.source for e in events for c in e.checks})
@@ -294,8 +315,8 @@ def explain(
         source=source,
         dataset=diag.dataset,
         point_set=diag.point_set,
-        period_start=minutes["timestamp"].min(),
-        period_end=minutes["timestamp"].max(),
+        period_start=as_recorded(minutes["timestamp"].min()),  # type: ignore[arg-type]
+        period_end=as_recorded(minutes["timestamp"].max()),  # type: ignore[arg-type]
         hours_total=hours.height,
         hours_scored=int(hours["scored"].sum()),
         hours_alarmed=int(hours["alarm"].sum()),
@@ -308,12 +329,6 @@ def explain(
     if problems:  # step 6: fail closed
         raise ExplanationError("; ".join(problems[:5]))
     return result
-
-
-def hour_table(minutes: pl.DataFrame, diag: Diagnoser, source: str) -> pl.DataFrame:
-    """Hourly answers without events, for evaluation."""
-    hours, _ = score_hours(add_minute_context(minutes, unlabelled(source)), diag)
-    return hours.select(*WINDOW_KEYS, "alarm", "answer", "top_class", "confidence")
 
 
 def as_json(result: DiagnosticResult) -> dict[str, Any]:

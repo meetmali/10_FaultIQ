@@ -60,90 +60,6 @@
         }
       }
     },
-    "/api/v1/fault-events": {
-      "get": {
-        "tags": [
-          "fault-events"
-        ],
-        "operationId": "ListFaultEvents",
-        "parameters": [
-          {
-            "name": "equipment_id",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "analysis_id",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "kind",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fault",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PagedResultOfFaultEventResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/equipment": {
       "post": {
         "tags": [
@@ -210,6 +126,74 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResultOfEquipmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/overview": {
+      "get": {
+        "tags": [
+          "equipment"
+        ],
+        "operationId": "GetEquipmentOverview",
+        "parameters": [
+          {
+            "name": "site",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfEquipmentOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/sites": {
+      "get": {
+        "tags": [
+          "equipment"
+        ],
+        "operationId": "ListSites",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SiteResponse"
+                  }
                 }
               }
             }
@@ -540,6 +524,295 @@
           }
         }
       }
+    },
+    "/api/v1/fault-events": {
+      "get": {
+        "tags": [
+          "fault-events"
+        ],
+        "operationId": "ListFaultEvents",
+        "parameters": [
+          {
+            "name": "equipment_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "analysis_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "site",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fault",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "review_status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfFaultEventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fault-events/summary": {
+      "get": {
+        "tags": [
+          "fault-events"
+        ],
+        "operationId": "SummariseFaultEvents",
+        "parameters": [
+          {
+            "name": "equipment_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "site",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaultEventSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fault-events/{id}": {
+      "get": {
+        "tags": [
+          "fault-events"
+        ],
+        "operationId": "GetFaultEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaultEventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fault-events/{id}/review": {
+      "patch": {
+        "tags": [
+          "fault-events"
+        ],
+        "operationId": "ReviewFaultEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaultEventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fault-library": {
+      "get": {
+        "tags": [
+          "fault-library"
+        ],
+        "operationId": "ListFaultLibrary",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "equipment",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaultLibraryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fault-library/{id}": {
+      "get": {
+        "tags": [
+          "fault-library"
+        ],
+        "operationId": "GetFaultLibraryEntry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryFaultResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -660,6 +933,42 @@
           }
         }
       },
+      "CitedText": {
+        "required": [
+          "text",
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      },
+      "Confusion": {
+        "required": [
+          "fault",
+          "named_as_other_hours",
+          "other_named_as_this_hours"
+        ],
+        "type": "object",
+        "properties": {
+          "fault": {
+            "type": "string"
+          },
+          "named_as_other_hours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "other_named_as_this_hours": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "CreateAnalysisRequest": {
         "required": [
           "upload_id",
@@ -690,6 +999,89 @@
             "type": "string"
           },
           "site": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "EquipmentOverview": {
+        "required": [
+          "id",
+          "name",
+          "site",
+          "status",
+          "latest_analysis_id",
+          "latest_analysis_status",
+          "latest_analysis_at",
+          "hours_scored",
+          "hours_alarmed",
+          "fault_events",
+          "other_events",
+          "top_fault"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "site": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "latest_analysis_id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "latest_analysis_status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "latest_analysis_at": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "hours_scored": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "hours_alarmed": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "fault_events": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "other_events": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "top_fault": {
             "type": [
               "null",
               "string"
@@ -737,7 +1129,10 @@
           "ends_at",
           "hours",
           "confidence",
-          "detector_score"
+          "detector_score",
+          "review_status",
+          "review_note",
+          "reviewed_at"
         ],
         "type": "object",
         "properties": {
@@ -787,6 +1182,157 @@
           "detector_score": {
             "type": "number",
             "format": "double"
+          },
+          "review_status": {
+            "type": "string"
+          },
+          "review_note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewed_at": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "FaultEventSummaryItem": {
+        "required": [
+          "kind",
+          "fault",
+          "events",
+          "hours"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "fault": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "events": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "FaultEventSummaryResponse": {
+        "required": [
+          "items",
+          "events",
+          "hours"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FaultEventSummaryItem"
+            }
+          },
+          "events": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "FaultLibraryResponse": {
+        "required": [
+          "review_status",
+          "sources",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "review_status": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LibrarySource"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LibraryFault"
+            }
+          }
+        }
+      },
+      "FaultMeasurements": {
+        "required": [
+          "source",
+          "symptoms",
+          "confused_with",
+          "performance"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "symptoms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Symptom"
+            }
+          },
+          "confused_with": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Confusion"
+            }
+          },
+          "performance": {
+            "$ref": "#/components/schemas/FaultPerformance"
+          }
+        }
+      },
+      "FaultPerformance": {
+        "required": [
+          "test_hours",
+          "precision",
+          "recall",
+          "by_severity"
+        ],
+        "type": "object",
+        "properties": {
+          "test_hours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "precision": {
+            "type": "number",
+            "format": "double"
+          },
+          "recall": {
+            "type": "number",
+            "format": "double"
+          },
+          "by_severity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeverityResult"
+            }
           }
         }
       },
@@ -826,6 +1372,121 @@
         "type": "string",
         "format": "binary"
       },
+      "LibraryFault": {
+        "required": [
+          "id",
+          "title",
+          "equipment",
+          "dataset",
+          "dataset_label",
+          "intensity_unit",
+          "definition",
+          "observed",
+          "causes",
+          "checks",
+          "measured"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "equipment": {
+            "type": "string"
+          },
+          "dataset": {
+            "type": "string"
+          },
+          "dataset_label": {
+            "type": "string"
+          },
+          "intensity_unit": {
+            "type": "string"
+          },
+          "definition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CitedText"
+              }
+            ]
+          },
+          "observed": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CitedText"
+              }
+            ]
+          },
+          "causes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitedText"
+            }
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitedText"
+            }
+          },
+          "measured": {
+            "$ref": "#/components/schemas/FaultMeasurements"
+          }
+        }
+      },
+      "LibraryFaultResponse": {
+        "required": [
+          "review_status",
+          "fault",
+          "sources"
+        ],
+        "type": "object",
+        "properties": {
+          "review_status": {
+            "type": "string"
+          },
+          "fault": {
+            "$ref": "#/components/schemas/LibraryFault"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LibrarySource"
+            }
+          }
+        }
+      },
+      "LibrarySource": {
+        "required": [
+          "id",
+          "citation",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "citation": {
+            "type": "string"
+          },
+          "url": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PagedResultOfAnalysisResponse": {
         "required": [
           "items",
@@ -839,6 +1500,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AnalysisResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page_size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfEquipmentOverview": {
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EquipmentOverview"
             }
           },
           "page": {
@@ -972,6 +1662,100 @@
           }
         }
       },
+      "ReviewRequest": {
+        "required": [
+          "status",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SeverityResult": {
+        "required": [
+          "intensity",
+          "hours",
+          "right_fault",
+          "said_no_fault",
+          "inconclusive"
+        ],
+        "type": "object",
+        "properties": {
+          "intensity": {
+            "type": "number",
+            "format": "double"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "right_fault": {
+            "type": "number",
+            "format": "double"
+          },
+          "said_no_fault": {
+            "type": "number",
+            "format": "double"
+          },
+          "inconclusive": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "SiteResponse": {
+        "required": [
+          "site",
+          "equipment"
+        ],
+        "type": "object",
+        "properties": {
+          "site": {
+            "type": "string"
+          },
+          "equipment": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "Symptom": {
+        "required": [
+          "feature",
+          "signal",
+          "unit",
+          "kind",
+          "deciding_hours"
+        ],
+        "type": "object",
+        "properties": {
+          "feature": {
+            "type": "string"
+          },
+          "signal": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "deciding_hours": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "UploadResponse": {
         "required": [
           "id",
@@ -1018,9 +1802,6 @@
       "name": "health"
     },
     {
-      "name": "fault-events"
-    },
-    {
       "name": "equipment"
     },
     {
@@ -1028,6 +1809,12 @@
     },
     {
       "name": "analyses"
+    },
+    {
+      "name": "fault-events"
+    },
+    {
+      "name": "fault-library"
     }
   ]
 }

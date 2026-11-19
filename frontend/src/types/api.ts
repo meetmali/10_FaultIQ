@@ -11,6 +11,18 @@ export type UploadResponse = Schemas["UploadResponse"];
 export type AnalysisResponse = Schemas["AnalysisResponse"];
 export type CreateAnalysisRequest = Schemas["CreateAnalysisRequest"];
 export type FaultEventResponse = Schemas["FaultEventResponse"];
+export type EquipmentOverview = Schemas["EquipmentOverview"];
+export type SiteResponse = Schemas["SiteResponse"];
+export type FaultEventSummaryResponse = Schemas["FaultEventSummaryResponse"];
+export type FaultLibraryResponse = Schemas["FaultLibraryResponse"];
+export type LibraryFaultResponse = Schemas["LibraryFaultResponse"];
+export type LibraryFault = Schemas["LibraryFault"];
+export type LibrarySource = Schemas["LibrarySource"];
+export type CitedText = Schemas["CitedText"];
+
+/** Derived equipment status (ADR 0025). */
+export type EquipmentStatus = "no_data" | "analysing" | "analysis_failed" | "fault" | "abnormal" | "normal";
+export type ReviewStatus = "unreviewed" | "needs_review" | "confirmed" | "rejected";
 
 export interface Paged<T> {
   items: T[];
@@ -35,6 +47,7 @@ export interface ProblemDetails {
 }
 
 export type {
+  Alternative,
   Check,
   Context,
   DiagnosticResult,

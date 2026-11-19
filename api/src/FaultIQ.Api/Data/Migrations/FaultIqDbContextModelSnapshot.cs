@@ -220,6 +220,23 @@ namespace FaultIQ.Api.Data.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("kind");
 
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("review_note");
+
+                    b.Property<string>("ReviewStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("unreviewed")
+                        .HasColumnName("review_status");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
                     b.Property<DateTimeOffset>("StartsAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("starts_at");
@@ -242,6 +259,8 @@ namespace FaultIQ.Api.Data.Migrations
                             t.HasCheckConstraint("ck_fault_events_hours", "hours > 0");
 
                             t.HasCheckConstraint("ck_fault_events_kind", "kind IN ('fault', 'inconclusive', 'no_supported_fault', 'not_diagnosable')");
+
+                            t.HasCheckConstraint("ck_fault_events_review_status", "review_status IN ('unreviewed', 'needs_review', 'confirmed', 'rejected')");
 
                             t.HasCheckConstraint("ck_fault_events_span", "ends_at > starts_at");
                         });

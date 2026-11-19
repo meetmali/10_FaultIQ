@@ -18,6 +18,11 @@ class LibraryError(ValueError):
 class FaultInfo:
     title: str
     checks: tuple[Check, ...]
+    equipment: str = ""
+    intensity_unit: str = ""
+    definition: Check | None = None  # cited text: same shape as a check
+    observed: Check | None = None
+    causes: tuple[Check, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -37,14 +42,27 @@ def parse_library(text: str) -> FaultLibrary:
         for sid, s in raw.get("sources", {}).items()
     }
     faults = {}
+
+    def cited(item: dict[str, str] | None, name: str) -> Check | None:
+        if item is None:
+            return None
+        if item["source"] not in sources:
+            raise LibraryError(f"{name}: cites unknown source {item['source']!r}")
+        return Check(text=item["text"], source=item["source"])
+
     for name, f in raw.get("faults", {}).items():
-        checks = tuple(Check(text=c["text"], source=c["source"]) for c in f.get("checks", []))
+        checks = tuple(c for c in (cited(x, name) for x in f.get("checks", [])) if c)
         if not checks:
             raise LibraryError(f"{name}: needs at least one check")
-        for c in checks:
-            if c.source not in sources:
-                raise LibraryError(f"{name}: check cites unknown source {c.source!r}")
-        faults[name] = FaultInfo(title=f["title"], checks=checks)
+        faults[name] = FaultInfo(
+            title=f["title"],
+            checks=checks,
+            equipment=f.get("equipment", ""),
+            intensity_unit=f.get("intensity_unit", ""),
+            definition=cited(f.get("definition"), name),
+            observed=cited(f.get("observed"), name),
+            causes=tuple(c for c in (cited(x, name) for x in f.get("causes", [])) if c),
+        )
     return FaultLibrary(raw.get("review_status", "unreviewed"), sources, faults)
 
 

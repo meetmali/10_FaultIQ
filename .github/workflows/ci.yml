@@ -93,6 +93,15 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm test
+      # End-to-end journeys against the built app, with recorded API responses (ADR 0025).
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/test-results/
+          retention-days: 7
 
   # Docker isn't required on contributors' machines, so CI checks that every image still builds.
   images:

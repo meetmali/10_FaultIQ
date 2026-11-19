@@ -115,6 +115,10 @@ export interface Evidence {
 }
 export interface ModelOutput {
   /**
+   * Most likely classes over the event, highest first; empty if not diagnosable
+   */
+  alternatives?: Alternative[];
+  /**
    * Fault name, or the answer kind when no fault is named
    */
   answer: string;
@@ -140,6 +144,16 @@ export interface ModelOutput {
    * Share of validation hours named as this fault that really were it
    */
   validation_precision: number | null;
+}
+export interface Alternative {
+  /**
+   * A class the model considered: a fault name or fault_free
+   */
+  fault: string;
+  /**
+   * Mean hourly probability over the event
+   */
+  probability: number;
 }
 export interface Statement {
   kind: "finding" | "measured" | "context" | "uncertainty" | "recommended";

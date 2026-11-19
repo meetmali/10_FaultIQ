@@ -1,5 +1,24 @@
 {
   "$defs": {
+    "Alternative": {
+      "additionalProperties": false,
+      "properties": {
+        "fault": {
+          "description": "A class the model considered: a fault name or fault_free",
+          "type": "string"
+        },
+        "probability": {
+          "description": "Mean hourly probability over the event",
+          "type": "number"
+        }
+      },
+      "required": [
+        "fault",
+        "probability"
+      ],
+      "title": "Alternative",
+      "type": "object"
+    },
     "Check": {
       "additionalProperties": false,
       "properties": {
@@ -263,6 +282,13 @@
     "ModelOutput": {
       "additionalProperties": false,
       "properties": {
+        "alternatives": {
+          "description": "Most likely classes over the event, highest first; empty if not diagnosable",
+          "items": {
+            "$ref": "#/$defs/Alternative"
+          },
+          "type": "array"
+        },
         "answer": {
           "description": "Fault name, or the answer kind when no fault is named",
           "type": "string"
@@ -397,7 +423,7 @@
       "type": "object"
     }
   },
-  "$id": "https://github.com/meetmali/FaultIQ/diagnostic-result/1.0.0",
+  "$id": "https://github.com/meetmali/FaultIQ/diagnostic-result/1.1.0",
   "additionalProperties": false,
   "properties": {
     "dataset": {
@@ -455,7 +481,7 @@
       "type": "string"
     },
     "schema_version": {
-      "default": "1.0.0",
+      "default": "1.1.0",
       "type": "string"
     },
     "source": {

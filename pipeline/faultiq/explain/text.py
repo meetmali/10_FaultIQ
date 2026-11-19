@@ -13,6 +13,10 @@ from datetime import datetime
 # feature base name -> (plain name, display unit)
 SIGNALS: dict[str, tuple[str, str]] = {
     # normal-model targets (residual evidence shows the physical value)
+    # operating conditions (chart overviews)
+    "oat": ("outdoor-air temperature", "degC"),
+    "rat": ("return-air temperature", "degC"),
+    "mat": ("mixed-air temperature", "degC"),
     "sat": ("supply-air temperature", "degC"),
     "sa_flow": ("supply airflow", "m3/s"),
     "refg_suct_pres": ("suction pressure", "kPa"),

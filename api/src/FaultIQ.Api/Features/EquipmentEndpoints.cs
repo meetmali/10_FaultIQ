@@ -13,8 +13,29 @@ public sealed record EquipmentResponse(Guid Id, string Name, string? Site, DateT
     public static EquipmentResponse From(Equipment e) => new(e.Id, e.Name, e.Site, e.CreatedAt);
 }
 
+/// <summary>
+/// One unit with its latest analysis and a derived status (ADR 0025):
+/// no_data, analysing, analysis_failed, fault (a named fault), abnormal (alarms with no named fault) or normal.
+/// </summary>
+public sealed record EquipmentOverview(
+    Guid Id, string Name, string? Site, string Status, Guid? LatestAnalysisId, string? LatestAnalysisStatus,
+    DateTimeOffset? LatestAnalysisAt, int? HoursScored, int? HoursAlarmed, int FaultEvents, int OtherEvents,
+    string? TopFault);
+
+public sealed record SiteResponse(string Site, int Equipment);
+
 public static class EquipmentEndpoints
 {
+    internal static string DeriveStatus(string? latestStatus, int faultEvents, int otherEvents) => latestStatus switch
+    {
+        null => "no_data",
+        AnalysisStatus.Queued or AnalysisStatus.Running => "analysing",
+        AnalysisStatus.Failed => "analysis_failed",
+        _ when faultEvents > 0 => "fault",
+        _ when otherEvents > 0 => "abnormal",
+        _ => "normal",
+    };
+
     public static RouteGroupBuilder MapEquipmentEndpoints(this RouteGroupBuilder api)
     {
         var g = api.MapGroup("/equipment").WithTags("equipment");
@@ -56,6 +77,50 @@ public static class EquipmentEndpoints
                 .Select(e => new EquipmentResponse(e.Id, e.Name, e.Site, e.CreatedAt)).ToListAsync(ct);
             return TypedResults.Ok(new PagedResult<EquipmentResponse>(items, p.Number, p.Size, total));
         }).WithName("ListEquipment");
+
+        g.MapGet("/overview", async (
+            FaultIqDbContext db, CancellationToken ct,
+            [FromQuery] string? site, [FromQuery] int? page, [FromQuery(Name = "page_size")] int? pageSize) =>
+        {
+            var p = new PageQuery(page, pageSize);
+            var q = db.Equipment.AsNoTracking();
+            if (!string.IsNullOrWhiteSpace(site))
+            {
+                q = q.Where(e => e.Site == site);
+            }
+
+            var total = await q.CountAsync(ct);
+            var units = await q.OrderBy(e => e.Name).ThenBy(e => e.Id).Skip(p.Skip).Take(p.Size).ToListAsync(ct);
+            var ids = units.Select(u => u.Id).ToList();
+            var latest = (await db.Analyses.AsNoTracking().Where(a => ids.Contains(a.EquipmentId))
+                    .Select(a => new { a.Id, a.EquipmentId, a.Status, a.CreatedAt, a.FinishedAt, a.HoursScored, a.HoursAlarmed })
+                    .ToListAsync(ct))
+                .GroupBy(a => a.EquipmentId)
+                .ToDictionary(x => x.Key, x => x.OrderByDescending(a => a.CreatedAt).First());
+            var latestIds = latest.Values.Select(a => a.Id).ToList();
+            var events = await db.FaultEvents.AsNoTracking().Where(e => latestIds.Contains(e.AnalysisId))
+                .GroupBy(e => new { e.AnalysisId, e.Kind, e.Fault })
+                .Select(x => new { x.Key.AnalysisId, x.Key.Kind, x.Key.Fault, Count = x.Count(), Hours = x.Sum(e => e.Hours) })
+                .ToListAsync(ct);
+
+            var items = units.Select(u =>
+            {
+                var a = latest.GetValueOrDefault(u.Id);
+                var mine = a is null ? [] : events.Where(e => e.AnalysisId == a.Id).ToList();
+                var faults = mine.Where(e => e.Kind == "fault").Sum(e => e.Count);
+                var others = mine.Where(e => e.Kind != "fault").Sum(e => e.Count);
+                var top = mine.Where(e => e.Kind == "fault").OrderByDescending(e => e.Hours).FirstOrDefault()?.Fault;
+                return new EquipmentOverview(u.Id, u.Name, u.Site, DeriveStatus(a?.Status, faults, others), a?.Id,
+                    a?.Status, a?.FinishedAt ?? a?.CreatedAt, a?.HoursScored, a?.HoursAlarmed, faults, others, top);
+            }).ToList();
+            return TypedResults.Ok(new PagedResult<EquipmentOverview>(items, p.Number, p.Size, total));
+        }).WithName("GetEquipmentOverview");
+
+        g.MapGet("/sites", async (FaultIqDbContext db, CancellationToken ct) =>
+            TypedResults.Ok(await db.Equipment.AsNoTracking().Where(e => e.Site != null)
+                .GroupBy(e => e.Site!).OrderBy(x => x.Key)
+                .Select(x => new SiteResponse(x.Key, x.Count())).ToListAsync(ct)))
+            .WithName("ListSites");
 
         g.MapGet("/{id:guid}", async Task<Results<Ok<EquipmentResponse>, ProblemHttpResult>> (
             Guid id, FaultIqDbContext db, CancellationToken ct) =>

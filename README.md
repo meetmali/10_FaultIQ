@@ -121,6 +121,19 @@ curl localhost:8000/api/v1/analyses/<id>/result     # once its status is "succee
 Lists (`/equipment`, `/analyses`, `/fault-events`) take `page` and `page_size` (at most 100) and return
 `items`, `page`, `page_size` and `total`. Errors are RFC 9457 problems with a stable `code`.
 
+### Seeing it with sample data
+
+With the API and worker running and models trained, load eight sample units through the API:
+
+```bash
+python3 scripts/seed_demo.py data/raw/LBNL_FDD_Data_Sets_RTU_all_3 --api http://localhost:8000
+```
+
+Then open http://localhost:5173. The **Dashboard** lists each unit's status and recent fault events.
+Open a unit for **Fault Diagnostics** (evidence charts, alternatives, cited checks and a review
+form), and follow a fault into the **Fault Library**. For the public demo, seed first, then set
+`DEMO_MODE=true`: the demo rejects every write.
+
 ### Tests and checks
 
 ```bash
@@ -133,6 +146,10 @@ Database tests run when these point at a disposable database, and are skipped ot
 export FAULTIQ_TEST_DB="Host=localhost;Database=faultiq_test;Username=faultiq;Password=change-me"
 export FAULTIQ_TEST_DATABASE_URL="postgresql+psycopg://faultiq:change-me@localhost:5432/faultiq_test"
 ```
+
+End-to-end tests (Playwright) run in CI against the built app with recorded API responses:
+`cd frontend && npx playwright install chromium && npm run test:e2e`. To run the same journey against
+the real, seeded stack: `E2E_REAL=1 E2E_BASE_URL=http://localhost:5173 npx playwright test e2e/real.spec.ts`.
 
 After changing an API contract, regenerate the committed contracts and the frontend types:
 `cd api && UPDATE_CONTRACTS=1 dotnet test`, then `cd frontend && npm run generate:api`. CI fails if they drift.
@@ -197,6 +214,8 @@ Citation: Lawrence Berkeley National Laboratory, LBNL FDD Data Sets. DOI: https:
 ## Known issues
 
 - **No login yet** (Phase 8). Don't expose a writable instance (`DEMO_MODE=false`) to the internet.
+- Source files carry no time zone, and point mappings can't declare one yet. Event times are shown exactly
+  as recorded in the uploaded data (ADR 0025).
 - Bundled models only analyse LBNL-format uploads (`lbnl_simulated`, `lbnl_experimental`). Other files are
   validated, then refused with `model_unavailable` or `validation_failed` (ADR 0024).
 - Analysing an LBNL file overlaps the data the bundled models were trained on, so those results are a

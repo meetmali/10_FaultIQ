@@ -56,6 +56,29 @@ public sealed class UploadValidationTests(ApiFactory factory) : IClassFixture<Ap
     }
 
     [Fact]
+    public async Task FaultLibrary_ListsSearchesAndCitesSources()
+    {
+        var client = factory.CreateClient();
+        var all = await client.GetFromJsonAsync<JsonElement>(new Uri("/api/v1/fault-library", UriKind.Relative));
+        Assert.Equal(9, all.GetProperty("items").GetArrayLength());
+        Assert.Equal("unreviewed", all.GetProperty("review_status").GetString());
+
+        // Search reaches the measured symptoms, not just names.
+        var hits = await client.GetFromJsonAsync<JsonElement>(
+            new Uri("/api/v1/fault-library?q=discharge%20pressure", UriKind.Relative));
+        Assert.Contains(hits.GetProperty("items").EnumerateArray(), f => f.GetProperty("id").GetString() == "condenser_fouling");
+
+        var entry = await client.GetFromJsonAsync<JsonElement>(
+            new Uri("/api/v1/fault-library/sat_sensor_bias", UriKind.Relative));
+        var sources = entry.GetProperty("sources").EnumerateArray().Select(x => x.GetProperty("id").GetString()).ToList();
+        Assert.Contains("faultiq-diagnosis", sources);
+        Assert.Equal("Sensors", entry.GetProperty("fault").GetProperty("equipment").GetString());
+
+        var missing = await client.GetAsync(new Uri("/api/v1/fault-library/not_a_fault", UriKind.Relative));
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+    }
+
+    [Fact]
     public void Model_HasNoChangesMissingFromMigrations()
     {
         using var scope = factory.Services.CreateScope();
@@ -173,6 +196,80 @@ public sealed class DatabaseEndpointTests(DatabaseFactory factory) : IClassFixtu
         var events = await client.GetFromJsonAsync<JsonElement>(
             Url($"/api/v1/fault-events?analysis_id={id}&fault=condenser_fouling"));
         Assert.Equal(1, events.GetProperty("total").GetInt32());
+    }
+
+    private async Task<(Guid Equipment, Guid Analysis, Guid Event)> SeedFaultAsync(HttpClient client, string name)
+    {
+        var equipmentId = await CreateEquipmentAsync(client, name);
+        var upload = await UploadAsync(client, equipmentId, "a\n1\n"u8.ToArray());
+        var created = await client.PostAsJsonAsync(Url("/api/v1/analyses"),
+            new { upload_id = upload.GetProperty("id").GetGuid() }, Snake);
+        var id = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        var eventId = Guid.NewGuid();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FaultIqDbContext>();
+        var row = await db.Analyses.SingleAsync(a => a.Id == id);
+        row.Status = AnalysisStatus.Succeeded;
+        row.FinishedAt = DateTimeOffset.UtcNow;
+        db.FaultEvents.Add(new FaultEvent
+        {
+            Id = eventId,
+            AnalysisId = id,
+            EquipmentId = equipmentId,
+            EventKey = "event-1",
+            Kind = "fault",
+            Fault = "oa_damper_stuck",
+            StartsAt = DateTimeOffset.UtcNow.AddHours(-5),
+            EndsAt = DateTimeOffset.UtcNow,
+            Hours = 5,
+            Confidence = 0.99,
+            DetectorScore = 15.0,
+        });
+        await db.SaveChangesAsync();
+        return (equipmentId, id, eventId);
+    }
+
+    [DatabaseFact]
+    public async Task Review_RecordsAnOutcome_AndRejectsUnknownStatuses()
+    {
+        var client = factory.CreateClient();
+        var (_, _, eventId) = await SeedFaultAsync(client, "RTU-review");
+        Assert.Equal("unreviewed", (await client.GetFromJsonAsync<JsonElement>(Url($"/api/v1/fault-events/{eventId}")))
+            .GetProperty("review_status").GetString()); // the database default the worker relies on
+
+        var bad = await client.PatchAsJsonAsync(Url($"/api/v1/fault-events/{eventId}/review"), new { status = "maybe" });
+        Assert.Equal(HttpStatusCode.BadRequest, bad.StatusCode);
+
+        var ok = await client.PatchAsJsonAsync(Url($"/api/v1/fault-events/{eventId}/review"),
+            new { status = "confirmed", note = "Actuator linkage found slipped on site." });
+        Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        var reviewed = await ok.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("confirmed", reviewed.GetProperty("review_status").GetString());
+        Assert.NotEqual(JsonValueKind.Null, reviewed.GetProperty("reviewed_at").ValueKind);
+
+        var confirmed = await client.GetFromJsonAsync<JsonElement>(Url("/api/v1/fault-events?review_status=confirmed"));
+        Assert.Contains(confirmed.GetProperty("items").EnumerateArray(), e => e.GetProperty("id").GetGuid() == eventId);
+    }
+
+    [DatabaseFact]
+    public async Task Overview_DerivesEachUnitsStatus_AndSummaryCountsEvents()
+    {
+        var client = factory.CreateClient();
+        var idle = await CreateEquipmentAsync(client, "RTU-idle");
+        var (faulty, _, _) = await SeedFaultAsync(client, "RTU-faulty");
+
+        var overview = await client.GetFromJsonAsync<JsonElement>(Url("/api/v1/equipment/overview?page_size=100"));
+        var byId = overview.GetProperty("items").EnumerateArray().ToDictionary(x => x.GetProperty("id").GetGuid());
+        Assert.Equal("no_data", byId[idle].GetProperty("status").GetString());
+        Assert.Equal("fault", byId[faulty].GetProperty("status").GetString());
+        Assert.Equal("oa_damper_stuck", byId[faulty].GetProperty("top_fault").GetString());
+
+        var summary = await client.GetFromJsonAsync<JsonElement>(Url($"/api/v1/fault-events/summary?equipment_id={faulty}"));
+        Assert.Equal(1, summary.GetProperty("events").GetInt32());
+        Assert.Equal(5, summary.GetProperty("hours").GetInt32());
+
+        var sites = await client.GetFromJsonAsync<JsonElement>(Url("/api/v1/equipment/sites"));
+        Assert.Contains(sites.EnumerateArray(), x => x.GetProperty("site").GetString() == "Test site");
     }
 
     [DatabaseFact]

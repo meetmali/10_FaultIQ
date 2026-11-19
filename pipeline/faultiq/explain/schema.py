@@ -15,7 +15,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"  # 1.1.0 added ModelOutput.alternatives
 
 AnswerKind = Literal["fault", "no_supported_fault", "inconclusive", "not_diagnosable"]
 StatementKind = Literal["finding", "measured", "context", "uncertainty", "recommended"]
@@ -78,6 +78,11 @@ class Context(Frozen):
     outdoor_air_high: float | None
 
 
+class Alternative(Frozen):
+    fault: str = Field(description="A class the model considered: a fault name or fault_free")
+    probability: float = Field(description="Mean hourly probability over the event")
+
+
 class ModelOutput(Frozen):
     answer: str = Field(description="Fault name, or the answer kind when no fault is named")
     top_class: str | None = Field(description="Most likely class before the confidence cut-off")
@@ -89,6 +94,10 @@ class ModelOutput(Frozen):
     detector_score: float = Field(description="Highest hourly detector score in the event")
     detector_threshold: float
     model_family: str
+    alternatives: list[Alternative] = Field(
+        default_factory=list,
+        description="Most likely classes over the event, highest first; empty if not diagnosable",
+    )
 
 
 class Statement(Frozen):

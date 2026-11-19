@@ -28,7 +28,9 @@ from tests.test_detection import minutes, normal_frame
 
 LIB = fault_library()
 T0 = datetime(2018, 10, 11, 7)
-CONTRACT = Path(__file__).parents[2] / "docs" / "contracts" / "diagnostic-result.schema.json"
+ROOT = Path(__file__).parents[2]
+CONTRACT = ROOT / "docs" / "contracts" / "diagnostic-result.schema.json"
+SERVED_LIBRARY = ROOT / "api" / "src" / "FaultIQ.Api" / "FaultLibrary" / "fault-library.json"
 
 # ------------------------------------------------------------ library and text
 
@@ -195,6 +197,31 @@ def test_committed_contract_matches_the_schema() -> None:
     assert CONTRACT.read_text() == json_schema()
 
 
+def test_served_fault_library_matches_its_sources() -> None:
+    """The API serves a generated file; regenerate with `python -m faultiq export-library`."""
+    import json
+
+    from faultiq.explain.library_export import library_json
+
+    results = json.loads((ROOT / "docs" / "diagnosis" / "results.json").read_text())
+    assert SERVED_LIBRARY.read_text() == library_json(LIB, results)
+
+
+def test_library_measurements_come_from_held_out_results() -> None:
+    import json
+
+    from faultiq.explain.library_export import export_library
+
+    results = json.loads((ROOT / "docs" / "diagnosis" / "results.json").read_text())
+    lib = {f["id"]: f for f in export_library(LIB, results)["faults"]}
+    assert lib["condenser_fouling"]["measured"]["symptoms"][0]["signal"] == "discharge pressure"
+    assert lib["sat_sensor_bias"]["dataset"] == "experimental"
+    every_cited = [
+        c["source"] for f in lib.values() for c in [f["definition"], f["observed"], *f["causes"]]
+    ]
+    assert set(every_cited) <= set(LIB.sources)
+
+
 # ------------------------------------------------------------ workflow end to end
 
 
@@ -231,9 +258,15 @@ def test_workflow_finds_explains_and_checks_a_fault_without_seeing_a_label() -> 
     assert event.kind == "fault" and event.fault == "condenser_fouling"
     assert event.hours == 3
     assert event.evidence[0].feature == "resid:sat"
+    alternatives = event.model.alternatives
+    assert alternatives[0].fault == "condenser_fouling"  # highest first, the answer itself
+    assert {a.fault for a in alternatives} == {"condenser_fouling", NORMAL}
+    assert sum(a.probability for a in alternatives) == pytest.approx(1.0, abs=1e-3)
     assert event.evidence[0].expected == pytest.approx(14.0, abs=0.3)
     assert [s.id for s in result.sources] == ["ashrae-180"]
     assert result.library_review_status == "unreviewed"
+    # Times are as recorded, explicitly marked, so no reader shifts them by its own zone.
+    assert event.start.utcoffset() is not None and event.start.hour == 2
 
 
 def test_workflow_refuses_unprocessed_input() -> None:

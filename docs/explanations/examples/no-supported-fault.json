@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "pipeline_version": "0.2.0",
   "diagnosis_version": "0.1.0",
   "source": "OA_damper_stuck_050_Winter_2022.csv",
   "dataset": "experimental",
   "point_set": "all",
-  "period_start": "2022-02-27T00:00:00",
-  "period_end": "2022-02-27T23:59:00",
+  "period_start": "2022-02-27T00:00:00Z",
+  "period_end": "2022-02-27T23:59:00Z",
   "hours_total": 24,
   "hours_scored": 11,
   "hours_alarmed": 11,
@@ -19,8 +19,8 @@
   "events": [
     {
       "id": "event-1",
-      "start": "2022-02-27T07:00:00",
-      "end": "2022-02-27T14:00:00",
+      "start": "2022-02-27T07:00:00Z",
+      "end": "2022-02-27T14:00:00Z",
       "hours": 7,
       "kind": "no_supported_fault",
       "fault": null,
@@ -33,7 +33,21 @@
         "validation_precision": null,
         "detector_score": 15.9177,
         "detector_threshold": 2.5312,
-        "model_family": "logistic"
+        "model_family": "logistic",
+        "alternatives": [
+          {
+            "fault": "fault_free",
+            "probability": 0.8549
+          },
+          {
+            "fault": "oa_damper_stuck",
+            "probability": 0.0989
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "probability": 0.0284
+          }
+        ]
       },
       "context": {
         "running": "supply fan",

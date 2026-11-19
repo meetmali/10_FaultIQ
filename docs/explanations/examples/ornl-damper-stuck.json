@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "pipeline_version": "0.2.0",
   "diagnosis_version": "0.1.0",
   "source": "OA_damper_stuck_050_Summer_2021.csv",
   "dataset": "experimental",
   "point_set": "all",
-  "period_start": "2021-06-07T00:00:00",
-  "period_end": "2021-06-07T23:59:00",
+  "period_start": "2021-06-07T00:00:00Z",
+  "period_end": "2021-06-07T23:59:00Z",
   "hours_total": 24,
   "hours_scored": 15,
   "hours_alarmed": 15,
@@ -19,8 +19,8 @@
   "events": [
     {
       "id": "event-1",
-      "start": "2021-06-07T07:00:00",
-      "end": "2021-06-07T22:00:00",
+      "start": "2021-06-07T07:00:00Z",
+      "end": "2021-06-07T22:00:00Z",
       "hours": 15,
       "kind": "fault",
       "fault": "oa_damper_stuck",
@@ -33,7 +33,21 @@
         "validation_precision": null,
         "detector_score": 35.4872,
         "detector_threshold": 14.8509,
-        "model_family": "logistic"
+        "model_family": "logistic",
+        "alternatives": [
+          {
+            "fault": "oa_damper_stuck",
+            "probability": 0.9899
+          },
+          {
+            "fault": "fault_free",
+            "probability": 0.0068
+          },
+          {
+            "fault": "sat_sensor_bias",
+            "probability": 0.0033
+          }
+        ]
       },
       "context": {
         "running": "supply fan",
