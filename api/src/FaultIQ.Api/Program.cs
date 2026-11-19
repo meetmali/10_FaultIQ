@@ -1,6 +1,9 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using FaultIQ.Api.Features;
 using FaultIQ.Api.Health;
 using FaultIQ.Api.Hosting;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,8 +16,12 @@ builder.Logging.AddJsonConsole(o =>
 });
 
 // snake_case JSON so the API matches the Python pipeline and the frontend (ADR 0007).
+// Numbers must be JSON numbers (no "42" strings), which keeps the OpenAPI contract exact.
 builder.Services.ConfigureHttpJsonOptions(o =>
-    o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+{
+    o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+    o.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+});
 
 // RFC 9457 Problem Details for every error, with a stable "code" field. No stack traces.
 builder.Services.AddProblemDetails(o => o.CustomizeProblemDetails = ctx =>
@@ -33,6 +40,13 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
     .AllowAnyHeader()));
 
 builder.Services.AddFaultIqHosting(builder.Configuration);
+builder.Services.AddFaultIqPersistence(builder.Configuration);
+builder.Services.AddFaultIqTelemetry(builder.Configuration);
+
+// Uploads may be up to Uploads:MaxSizeMb; allow 1 MB on top for the multipart envelope.
+var maxUpload = (builder.Configuration.GetValue<int?>("Uploads:MaxSizeMb") ?? 100) * 1024L * 1024L;
+builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestBodySize = maxUpload + 1024 * 1024);
+builder.Services.Configure<FormOptions>(o => o.MultipartBodyLengthLimit = maxUpload + 1024 * 1024);
 builder.Services.AddOpenApi("v1");
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IDatabaseProbe, NpgsqlDatabaseProbe>();
@@ -48,8 +62,14 @@ app.MapOpenApi("/api/{documentName}/openapi.json");
 
 var v1 = app.MapGroup("/api/v1");
 v1.MapHealthEndpoints();
+v1.MapEquipmentEndpoints();
+v1.MapUploadEndpoints();
+v1.MapAnalysisEndpoints();
+v1.MapFaultEventEndpoints();
 
-app.Run();
+await app.MigrateIfConfiguredAsync();
+
+await app.RunAsync();
 
 // Exposed for WebApplicationFactory in integration tests.
 public partial class Program;

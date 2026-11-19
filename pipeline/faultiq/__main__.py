@@ -3,6 +3,7 @@
 python -m faultiq process-lbnl <raw-root> [--out DIR]
 python -m faultiq process <file.csv> --mapping <mapping.toml> [--out DIR]
 python -m faultiq draft-mapping <file.csv> [--name NAME]
+python -m faultiq train-models <processed-dir> [--out DIR]
 """
 
 from __future__ import annotations
@@ -39,8 +40,18 @@ def main(argv: list[str] | None = None) -> int:
     p_draft.add_argument("csv", type=Path)
     p_draft.add_argument("--name", default="my_rtu")
 
+    p_models = sub.add_parser("train-models", help="train the model files the worker loads")
+    p_models.add_argument("processed", type=Path)
+    p_models.add_argument("--out", type=Path, default=Path("models"))
+
     args = parser.parse_args(argv)
     configure_logging(args.log_level)
+
+    if args.command == "train-models":
+        from faultiq.explain.models import train_models  # heavy imports only when needed
+
+        print(f"Wrote {train_models(args.processed, args.out)}")
+        return 0
 
     if args.command == "draft-mapping":
         columns = pl.read_csv(args.csv, n_rows=0, infer_schema_length=0).columns

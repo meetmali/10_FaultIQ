@@ -64,8 +64,12 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
       UPLOAD_DIR: /app/data/uploads
+      MODEL_DIR: /app/models
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
       - uploads:/app/data/uploads
+      # Trained model files (`make train-models`), read-only. See docs/deployment.md.
+      - ./models:/app/models:ro
     depends_on:
       postgres:
         condition: service_healthy

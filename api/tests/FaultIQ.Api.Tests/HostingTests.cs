@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace FaultIQ.Api.Tests;
 
-public sealed class HostingTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HostingTests(ApiFactory factory)
+    : IClassFixture<ApiFactory>
 {
     private HttpClient ClientWith(params (string Key, string Value)[] settings) =>
         factory.WithWebHostBuilder(b =>

@@ -147,11 +147,18 @@ def fit_simulated(processed: Path, point_set: str = "all") -> Diagnoser:
 
 
 def fit_experimental(processed: Path, test_season: str, point_set: str = "all") -> Diagnoser:
-    """The ORNL fold that holds `test_season` out (ADR 0022 splits)."""
+    """The ORNL fold that holds `test_season` out (ADR 0022 splits), for evaluation."""
+    return fit_experimental_roles(processed, season_fold(test_season), point_set)
+
+
+def fit_experimental_roles(
+    processed: Path, roles: dict[str, str], point_set: str = "all"
+) -> Diagnoser:
+    """ORNL diagnoser for any season roles. A production model has no test season: three
+    seasons train and one validates (ADR 0024)."""
     entries = [
         e for e in _manifest(processed) if e["label"]["dataset"] == "experimental" and e["output"]
     ]
-    roles = season_fold(test_season)
     train_seasons = [s for s, r in roles.items() if r == "train"]
     normal_by_season = [
         pl.concat(

@@ -1,4 +1,4 @@
-.PHONY: help setup up down logs api worker frontend test test-api test-pipeline test-frontend lint format typecheck check process-lbnl
+.PHONY: help setup up down logs api worker frontend train-models test test-api test-pipeline test-frontend lint format typecheck check process-lbnl
 
 export DOTNET_CLI_TELEMETRY_OPTOUT := 1
 export DOTNET_NOLOGO := 1
@@ -24,10 +24,13 @@ api:  ## Run the .NET API locally with hot reload (no Docker)
 	cd api && ASPNETCORE_ENVIRONMENT=Development dotnet watch --project src/FaultIQ.Api run --urls http://localhost:8000
 
 worker:  ## Run the Python worker locally (no Docker)
-	cd pipeline && uv run python -m worker
+	cd pipeline && UPLOAD_DIR=../data/uploads MODEL_DIR=../models uv run python -m worker
 
 frontend:  ## Run the frontend dev server locally (no Docker)
 	cd frontend && npm run dev
+
+train-models:  ## Train the model files the worker loads (needs processed LBNL data)
+	cd pipeline && uv run python -m faultiq train-models ../data/processed/v0.2.0 --out ../models
 
 process-lbnl:  ## Process the LBNL dataset in data/raw into data/processed
 	cd pipeline && uv run python -m faultiq process-lbnl ../data/raw/LBNL_FDD_Data_Sets_RTU_all_3 --out ../data/processed/v0.2.0

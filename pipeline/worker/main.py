@@ -1,18 +1,22 @@
-"""FaultIQ worker entry point.
+"""FaultIQ worker entry point (ADR 0007, ADR 0024).
 
-Phase 0 behaviour: wait for the database, then idle with a periodic heartbeat log.
-Phase 6 replaces the idle loop with job claiming (SELECT ... FOR UPDATE SKIP LOCKED).
+Waits for the database, then loops: recover jobs abandoned by a dead worker, claim the oldest
+queued job (SELECT ... FOR UPDATE SKIP LOCKED), run it, repeat. When the queue is empty it polls
+every `poll_interval_seconds`. SIGTERM finishes the current job, then exits.
 """
 
 import argparse
 import logging
 import signal
 import threading
+import time
 from collections.abc import Callable
+from datetime import timedelta
+from pathlib import Path
 
 import faultiq
 from worker.config import WorkerSettings, get_settings
-from worker.db import check_database, make_engine
+from worker.db import check_database, make_engine, recover_stale, worker_id
 from worker.logging import configure_logging
 
 logger = logging.getLogger("faultiq.worker")
@@ -31,7 +35,13 @@ def wait_for_database(
     return False
 
 
-def run(settings: WorkerSettings, stop: threading.Event, probe: Callable[[], bool]) -> int:
+def run(
+    settings: WorkerSettings,
+    stop: threading.Event,
+    probe: Callable[[], bool],
+    step: Callable[[], bool] | None = None,
+) -> int:
+    """`step` runs one job and returns False when there was nothing to do."""
     logger.info(
         "worker_starting",
         extra={
@@ -47,8 +57,18 @@ def run(settings: WorkerSettings, stop: threading.Event, probe: Callable[[], boo
         logger.error("worker_giving_up_database_unreachable")
         return 1
 
-    while not stop.wait(settings.heartbeat_interval_seconds):
-        logger.info("worker_heartbeat", extra={"database_ok": probe(), "queue": "not_implemented"})
+    next_heartbeat = time.monotonic() + settings.heartbeat_interval_seconds
+    while not stop.is_set():
+        busy = False
+        try:
+            busy = step() if step is not None else False
+        except Exception:  # a database outage must not kill the worker; retry after a pause
+            logger.exception("worker_step_failed")
+        if time.monotonic() >= next_heartbeat:
+            logger.info("worker_heartbeat", extra={"database_ok": probe()})
+            next_heartbeat = time.monotonic() + settings.heartbeat_interval_seconds
+        if not busy:
+            stop.wait(settings.poll_interval_seconds)
     logger.info("worker_stopped")
     return 0
 
@@ -70,7 +90,25 @@ def main(argv: list[str] | None = None) -> int:
         logger.info("worker_check", extra={"database_ok": ok})
         return 0 if ok else 1
 
+    from faultiq.explain.models import ModelStore  # heavy ML imports only when running jobs
+    from worker.jobs import process_one
+    from worker.telemetry import configure_tracing
+
+    provider = configure_tracing()
+    store = ModelStore(Path(settings.model_dir))
+    me = worker_id()
+    timeout = timedelta(minutes=settings.job_timeout_minutes)
+
+    def step() -> bool:
+        recovered = recover_stale(engine, timeout)
+        if recovered:
+            logger.warning("jobs_requeued_after_timeout", extra={"count": recovered})
+        return process_one(engine, store, settings, me)
+
     stop = threading.Event()
     signal.signal(signal.SIGTERM, lambda *_: stop.set())
     signal.signal(signal.SIGINT, lambda *_: stop.set())
-    return run(settings, stop, probe)
+    try:
+        return run(settings, stop, probe, step)
+    finally:
+        provider.shutdown()

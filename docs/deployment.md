@@ -26,6 +26,18 @@ Edit `.env.prod`:
 | `DEMO_MODE` | `true` | `false` |
 | `POSTGRES_PASSWORD` | output of `openssl rand -hex 32` | the same |
 
+**Model files (self-hosting only).** The worker analyses uploads with trained model files that are
+not published, because they are built from the LBNL dataset, which you download yourself under its
+own terms ([ADR 0024](decisions/0024-api-persistence-and-jobs.md)). On a machine with the data:
+
+```bash
+make process-lbnl     # data/raw -> data/processed (about 10 seconds)
+make train-models     # data/processed -> models/ (about 30 seconds)
+```
+
+Copy `models/` next to `compose.prod.yml` on the server. Without it, uploads are still accepted and
+validated, but each analysis fails with `model_unavailable`. The demo doesn't need it.
+
 Then start it with the prebuilt images:
 
 ```bash
@@ -58,6 +70,10 @@ Restore a backup with
   The API trusts Caddy's forwarded client IP only because it can't be reached directly.
 - Never commit `.env.prod`.
 - The demo must stay `DEMO_MODE=true`. It rejects all writes, and the UI tells visitors not to enter real data.
+- **There is no login yet** (it arrives in Phase 8). A self-hosted instance with `DEMO_MODE=false`
+  accepts uploads from anyone who can reach it, so keep it on a private network or behind a VPN until then.
+- Model files are Python pickles. Only use ones you trained yourself or got from a source you trust;
+  the worker refuses any file whose SHA-256 doesn't match `models/manifest.json`.
 - Report vulnerabilities as described in [SECURITY.md](../SECURITY.md).
 
 ## Publishing new images (maintainers)

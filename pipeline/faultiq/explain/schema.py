@@ -139,5 +139,20 @@ def json_schema() -> str:
     import json
 
     schema = DiagnosticResult.model_json_schema()
+    _drop_field_titles(schema)
     schema["$id"] = f"https://github.com/meetmali/FaultIQ/diagnostic-result/{SCHEMA_VERSION}"
     return json.dumps(schema, indent=2, sort_keys=True) + "\n"
+
+
+def _drop_field_titles(node: object) -> None:
+    """Pydantic titles every field ("Hours", "Source"); type generators turn those into clashing
+    aliases (Source vs Source2). Model titles stay; field titles go."""
+    if isinstance(node, dict):
+        for prop in node.get("properties", {}).values():
+            if isinstance(prop, dict):
+                prop.pop("title", None)
+        for value in node.values():
+            _drop_field_titles(value)
+    elif isinstance(node, list):
+        for value in node:
+            _drop_field_titles(value)

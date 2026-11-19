@@ -7,8 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FaultIQ.Api.Tests;
 
-public sealed class HealthEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HealthEndpointTests(ApiFactory factory)
+    : IClassFixture<ApiFactory>
 {
     private sealed class FakeProbe(Func<bool> result) : IDatabaseProbe
     {

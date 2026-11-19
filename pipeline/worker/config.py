@@ -16,6 +16,8 @@ class WorkerSettings(BaseSettings):
     upload_dir: str = "./data/uploads"
     poll_interval_seconds: float = Field(default=5.0, gt=0)
     heartbeat_interval_seconds: float = Field(default=60.0, gt=0)
+    model_dir: str = "./models"
+    job_timeout_minutes: float = Field(default=30.0, gt=0)
 
 
 @lru_cache

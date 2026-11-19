@@ -85,21 +85,57 @@ All ports bind to `127.0.0.1` only. Check the worker with `docker compose logs w
 
 ### Option B: run each part natively
 
+Without Docker, run PostgreSQL 17 locally (for example `brew install postgresql@17 && brew services start postgresql@17`)
+and create the role and databases from `.env.example`:
+
 ```bash
-make setup      # dotnet restore + uv sync + npm ci
-make api        # http://localhost:8000 (dotnet watch)
-make frontend   # http://localhost:5173 (second terminal)
-make worker     # optional; needs PostgreSQL on localhost:5432
+psql -d postgres -c "CREATE ROLE faultiq LOGIN PASSWORD 'change-me' CREATEDB"
+createdb -O faultiq faultiq && createdb -O faultiq faultiq_test
+```
+
+Then:
+
+```bash
+make setup         # dotnet restore + uv sync + npm ci
+make train-models  # once: trained model files in models/ (needs processed LBNL data, see below)
+make api           # http://localhost:8000; applies database migrations on start
+make worker        # second terminal: claims and runs analysis jobs
+make frontend      # third terminal: http://localhost:5173
 ```
 
 Without PostgreSQL running, `/health` still returns `200`, while `/health/ready` returns `503`
 with `database: unavailable`. That's the expected behaviour.
+
+### Using the API
+
+The full contract is the OpenAPI document at `/api/v1/openapi.json`, committed as
+[docs/contracts/openapi.json](docs/contracts/openapi.json). A complete analysis takes four calls:
+
+```bash
+curl -X POST localhost:8000/api/v1/equipment -H 'content-type: application/json' -d '{"name": "RTU-1"}'
+curl -F file=@export.csv -F equipment_id=<id> -F format=lbnl_simulated localhost:8000/api/v1/uploads
+curl -X POST localhost:8000/api/v1/analyses -H 'content-type: application/json' -d '{"upload_id": "<id>"}'
+curl localhost:8000/api/v1/analyses/<id>/result     # once its status is "succeeded"
+```
+
+Lists (`/equipment`, `/analyses`, `/fault-events`) take `page` and `page_size` (at most 100) and return
+`items`, `page`, `page_size` and `total`. Errors are RFC 9457 problems with a stable `code`.
 
 ### Tests and checks
 
 ```bash
 make check      # dotnet format/build/test, ruff, mypy, pytest, eslint, tsc, vitest
 ```
+
+Database tests run when these point at a disposable database, and are skipped otherwise:
+
+```bash
+export FAULTIQ_TEST_DB="Host=localhost;Database=faultiq_test;Username=faultiq;Password=change-me"
+export FAULTIQ_TEST_DATABASE_URL="postgresql+psycopg://faultiq:change-me@localhost:5432/faultiq_test"
+```
+
+After changing an API contract, regenerate the committed contracts and the frontend types:
+`cd api && UPDATE_CONTRACTS=1 dotnet test`, then `cd frontend && npm run generate:api`. CI fails if they drift.
 
 Run `make help` to list all targets.
 
@@ -158,8 +194,13 @@ and [data dictionary](docs/data-dictionary.md).
 
 Citation: Lawrence Berkeley National Laboratory, LBNL FDD Data Sets. DOI: https://dx.doi.org/10.25984/1881324
 
-## Known issues (Phase 0)
+## Known issues
 
+- **No login yet** (Phase 8). Don't expose a writable instance (`DEMO_MODE=false`) to the internet.
+- Bundled models only analyse LBNL-format uploads (`lbnl_simulated`, `lbnl_experimental`). Other files are
+  validated, then refused with `model_unavailable` or `validation_failed` (ADR 0024).
+- Analysing an LBNL file overlaps the data the bundled models were trained on, so those results are a
+  demonstration, not an evaluation. The held-out evaluation is in the detection, diagnosis and explanation reports.
 - Neither Compose stack (development or production) has been run yet, because Docker isn't installed on the
   development machine. The API, worker, frontend and Caddy configuration have been verified natively, and CI
   builds all three images on every pull request.
