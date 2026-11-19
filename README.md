@@ -122,6 +122,14 @@ Known-fault diagnosis (Phase 4): [docs/diagnosis-report.md](docs/diagnosis-repor
 [model card](docs/model-card.md) and [ADR 0022](docs/decisions/0022-diagnosis-methodology.md). Rebuild with
 `cd pipeline && uv run python -I ../scripts/diagnosis_report.py ../data/processed/v0.2.0 --json ../docs/diagnosis/results.json --out ../docs/diagnosis-report.md`.
 
+Evidence-grounded explanations (Phase 5): every alarm becomes a fault event with a finding, measured evidence,
+an uncertainty statement and, for a named fault, checks from a cited [fault library](pipeline/faultiq/explain/fault_library.toml).
+A claim checker rejects any statement the evidence doesn't support. See the
+[explanation report](docs/explanation-report.md), [example explanations](docs/explanations/examples/),
+the result [contract](docs/contracts/diagnostic-result.schema.json) and
+[ADR 0023](docs/decisions/0023-explanations.md). Rebuild with
+`cd pipeline && uv run python -I ../scripts/explain_report.py ../data/processed/v0.2.0 --docs ../docs`.
+
 ## Deploying (public demo or self-hosting)
 
 One production setup serves both purposes. Set `DEMO_MODE=true` for a read-only, sample-data demo, or `false`

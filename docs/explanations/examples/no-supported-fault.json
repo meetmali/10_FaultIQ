@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0.0",
+  "pipeline_version": "0.2.0",
+  "diagnosis_version": "0.1.0",
+  "source": "OA_damper_stuck_050_Winter_2022.csv",
+  "dataset": "experimental",
+  "point_set": "all",
+  "period_start": "2022-02-27T00:00:00",
+  "period_end": "2022-02-27T23:59:00",
+  "hours_total": 24,
+  "hours_scored": 11,
+  "hours_alarmed": 11,
+  "supported_faults": [
+    "economizer_setpoint_offset",
+    "oa_damper_stuck",
+    "sat_sensor_bias"
+  ],
+  "library_review_status": "unreviewed",
+  "events": [
+    {
+      "id": "event-1",
+      "start": "2022-02-27T07:00:00",
+      "end": "2022-02-27T14:00:00",
+      "hours": 7,
+      "kind": "no_supported_fault",
+      "fault": null,
+      "fault_title": null,
+      "model": {
+        "answer": "no_supported_fault",
+        "top_class": "fault_free",
+        "confidence": 0.8571,
+        "cutoff": 0.5807,
+        "validation_precision": null,
+        "detector_score": 15.9177,
+        "detector_threshold": 2.5312,
+        "model_family": "logistic"
+      },
+      "context": {
+        "running": "supply fan",
+        "diagnosable_minutes": 410,
+        "dominant_mode": "economizer",
+        "outdoor_air_low": 3.455555555555555,
+        "outdoor_air_high": 7.56111111111111
+      },
+      "evidence": [
+        {
+          "id": "ev1",
+          "feature": "resid:oa_damper_cmd",
+          "signal": "outdoor-air damper command",
+          "kind": "residual",
+          "unit": "fraction",
+          "observed": 0.5,
+          "expected": 0.6737067817344071,
+          "deviation": -12.699008650743615,
+          "normal_low": -1.24693415646856,
+          "normal_high": 0.6342657888585777,
+          "hours": 7,
+          "weight": 12.699
+        },
+        {
+          "id": "ev2",
+          "feature": "resid:vav_sat_min",
+          "signal": "coldest VAV discharge temperature",
+          "kind": "residual",
+          "unit": "degC",
+          "observed": 13.544444444444443,
+          "expected": 13.494273377918901,
+          "deviation": 0.9129781474235397,
+          "normal_low": -2.0924379379393976,
+          "normal_high": -0.0423171038848248,
+          "hours": 7,
+          "weight": 1.0358
+        }
+      ],
+      "checks": [],
+      "statements": [
+        {
+          "kind": "finding",
+          "text": "The detector flagged operation from 27 Feb 2022 07:00 to 27 Feb 2022 14:00 (7 h) (highest score 15.92, alarm threshold 2.53), but the pattern matches none of the supported faults.",
+          "refs": [
+            "event",
+            "detector",
+            "model"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Outdoor-air damper command was 50%, against 67% expected for the same conditions (-12.7 typical errors; on fault-free hours the gap ranged -1.2 to +0.6). This is outside the fault-free range.",
+          "refs": [
+            "ev1"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Coldest VAV discharge temperature was 13.5 °C, against 13.5 °C expected for the same conditions (+0.9 typical errors; on fault-free hours the gap ranged -2.1 to -0.0). This is outside the fault-free range.",
+          "refs": [
+            "ev2"
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "The supply fan ran steadily for 410 minutes in this period, mostly in economizer mode, with outdoor air between 3.5 °C and 7.6 °C.",
+          "refs": [
+            "context"
+          ]
+        },
+        {
+          "kind": "uncertainty",
+          "text": "The cause may be a fault FaultIQ does not support, unusual operation, or a false alarm. No checks are recommended because no supported fault was identified.",
+          "refs": [
+            "model"
+          ]
+        }
+      ]
+    }
+  ],
+  "sources": []
+}

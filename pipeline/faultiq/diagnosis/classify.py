@@ -80,20 +80,34 @@ class Classifier:
             return np.zeros((0, len(self.classes)))
         return np.asarray(self.model.predict_proba(x))
 
-    def top_feature(self, x: np.ndarray, proba: np.ndarray) -> list[str | None]:
-        """The feature that pushed hardest toward the predicted class, per window (ADR 0016)."""
-        if len(x) == 0:
-            return []
-        k = proba.argmax(axis=1)
+    def contributions(self, x: np.ndarray, proba: np.ndarray) -> np.ndarray:
+        """How much each feature pushed each window toward its predicted class (ADR 0016).
+
+        LightGBM: TreeSHAP values from `pred_contrib`. Logistic: coefficient times scaled value.
+        Both are in log-odds units, so they add up across windows of one event.
+        """
         n = len(self.columns)
+        if len(x) == 0:
+            return np.zeros((0, n))
+        k = proba.argmax(axis=1)
+        binary = len(self.classes) == 2  # both libraries store one set of values for two classes
         if self.family == "logistic":
             scaled = self.model[:-1].transform(x)
-            contrib = scaled[:, None, :n] * self.model[-1].coef_[None, :, :n]
+            coef = self.model[-1].coef_
+            if binary:
+                coef = np.vstack([-coef[0], coef[0]])
+            contrib = scaled[:, None, :n] * coef[None, :, :n]
         else:
             raw = np.asarray(self.model.predict(x, pred_contrib=True))
-            contrib = raw.reshape(len(x), len(self.classes), n + 1)[:, :, :n]
-        picked = contrib[np.arange(len(x)), k]
-        return [self.columns[i] for i in picked.argmax(axis=1)]
+            if binary:
+                contrib = np.stack([-raw[:, :n], raw[:, :n]], axis=1)
+            else:
+                contrib = raw.reshape(len(x), len(self.classes), n + 1)[:, :, :n]
+        return np.asarray(contrib[np.arange(len(x)), k])
+
+    def top_feature(self, x: np.ndarray, proba: np.ndarray) -> list[str | None]:
+        """The feature that pushed hardest toward the predicted class, per window."""
+        return [self.columns[i] for i in self.contributions(x, proba).argmax(axis=1)]
 
 
 def tune_cutoff(

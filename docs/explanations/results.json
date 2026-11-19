@@ -1,0 +1,150 @@
+{
+  "experimental": {
+    "all": {
+      "events_on_fault_free_files": {
+        "fault": 3,
+        "inconclusive": 2,
+        "no_supported_fault": 3,
+        "not_diagnosable": 0
+      },
+      "events_on_faulty_files": {
+        "fault": 23,
+        "inconclusive": 12,
+        "no_supported_fault": 9,
+        "not_diagnosable": 0
+      },
+      "evidence_items": 143,
+      "evidence_with_normal_range": 0.7972,
+      "failures": [],
+      "false_alarm_events_named_a_fault": 3,
+      "files": 52,
+      "hours_alarmed": 212,
+      "hours_scored": 489,
+      "median_event_hours": 2.0,
+      "named_event_hours_right_fault": 0.8667,
+      "named_events_3h_or_longer_right_fault": 0.9,
+      "named_events_right_fault": 0.6957,
+      "named_faults_whose_first_evidence_is_outside_normal": 0.5769,
+      "residual_evidence_with_expected_value": 1.0,
+      "results_failing_the_checker": 0,
+      "statements": {
+        "context": 52,
+        "finding": 52,
+        "measured": 143,
+        "recommended": 52,
+        "uncertainty": 52
+      }
+    },
+    "basic": {
+      "events_on_fault_free_files": {
+        "fault": 1,
+        "inconclusive": 5,
+        "no_supported_fault": 0,
+        "not_diagnosable": 0
+      },
+      "events_on_faulty_files": {
+        "fault": 8,
+        "inconclusive": 23,
+        "no_supported_fault": 0,
+        "not_diagnosable": 0
+      },
+      "evidence_items": 99,
+      "evidence_with_normal_range": 0.8485,
+      "failures": [],
+      "false_alarm_events_named_a_fault": 1,
+      "files": 52,
+      "hours_alarmed": 148,
+      "hours_scored": 489,
+      "median_event_hours": 2.0,
+      "named_event_hours_right_fault": 0.7843,
+      "named_events_3h_or_longer_right_fault": 0.75,
+      "named_events_right_fault": 0.75,
+      "named_faults_whose_first_evidence_is_outside_normal": 0.6667,
+      "residual_evidence_with_expected_value": 1.0,
+      "results_failing_the_checker": 0,
+      "statements": {
+        "context": 37,
+        "finding": 37,
+        "measured": 99,
+        "recommended": 18,
+        "uncertainty": 37
+      }
+    }
+  },
+  "generated": "2026-11-19",
+  "library_review_status": "unreviewed",
+  "pipeline_version": "0.2.0",
+  "schema_version": "1.0.0",
+  "simulated": {
+    "all": {
+      "events_on_fault_free_files": {
+        "fault": 28,
+        "inconclusive": 0,
+        "no_supported_fault": 1,
+        "not_diagnosable": 0
+      },
+      "events_on_faulty_files": {
+        "fault": 581,
+        "inconclusive": 14,
+        "no_supported_fault": 55,
+        "not_diagnosable": 44
+      },
+      "evidence_items": 2168,
+      "evidence_with_normal_range": 1.0,
+      "failures": [],
+      "false_alarm_events_named_a_fault": 28,
+      "files": 25,
+      "hours_alarmed": 8104,
+      "hours_scored": 10800,
+      "median_event_hours": 3.0,
+      "named_event_hours_right_fault": 0.9696,
+      "named_events_3h_or_longer_right_fault": 0.9595,
+      "named_events_right_fault": 0.8021,
+      "named_faults_whose_first_evidence_is_outside_normal": 0.9048,
+      "residual_evidence_with_expected_value": 1.0,
+      "results_failing_the_checker": 0,
+      "statements": {
+        "context": 723,
+        "finding": 723,
+        "measured": 2168,
+        "recommended": 1167,
+        "uncertainty": 723
+      }
+    },
+    "basic": {
+      "events_on_fault_free_files": {
+        "fault": 0,
+        "inconclusive": 30,
+        "no_supported_fault": 0,
+        "not_diagnosable": 0
+      },
+      "events_on_faulty_files": {
+        "fault": 625,
+        "inconclusive": 533,
+        "no_supported_fault": 0,
+        "not_diagnosable": 43
+      },
+      "evidence_items": 3254,
+      "evidence_with_normal_range": 1.0,
+      "failures": [],
+      "false_alarm_events_named_a_fault": 0,
+      "files": 25,
+      "hours_alarmed": 7544,
+      "hours_scored": 10800,
+      "median_event_hours": 2.0,
+      "named_event_hours_right_fault": 0.8293,
+      "named_events_3h_or_longer_right_fault": 0.7333,
+      "named_events_right_fault": 0.6064,
+      "named_faults_whose_first_evidence_is_outside_normal": 0.9968,
+      "residual_evidence_with_expected_value": 1.0,
+      "results_failing_the_checker": 0,
+      "statements": {
+        "context": 1231,
+        "finding": 1231,
+        "measured": 3254,
+        "recommended": 1271,
+        "uncertainty": 1231
+      }
+    }
+  }
+}

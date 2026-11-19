@@ -1,0 +1,85 @@
+# FaultIQ fault library (ADR 0023).
+#
+# One entry per supported fault: a plain title and 2-3 checks a technician can do on site. Every
+# check names the source it is taken from. Citations are to whole documents, not clauses.
+#
+# review_status stays "unreviewed" until an HVAC professional has checked every entry against the
+# cited documents. The UI must show that status next to any recommended check.
+
+review_status = "unreviewed"
+
+[sources.ashrae-180]
+citation = "ANSI/ASHRAE/ACCA Standard 180, Standard Practice for Inspection and Maintenance of Commercial Building HVAC Systems"
+
+[sources.ashrae-g36]
+citation = "ASHRAE Guideline 36, High-Performance Sequences of Operation for HVAC Systems (automated fault detection and diagnostics)"
+
+[sources.title24-econ-fdd]
+citation = "California Building Energy Efficiency Standards (Title 24, Part 6), economizer fault detection and diagnostics requirements"
+
+[sources.lbnl-rtu]
+citation = "Lawrence Berkeley National Laboratory, Fault Detection and Diagnostics Data Sets: rooftop unit (fault definitions and how each was imposed)"
+url = "https://faultdetection.lbl.gov/dataset/rtu/"
+
+[faults.condenser_fouling]
+title = "Condenser fouling"
+checks = [
+  { text = "Inspect the condenser coil for dirt, debris or blockage and clean it if needed.", source = "ashrae-180" },
+  { text = "Confirm the condenser fans run and nothing obstructs airflow across the coil.", source = "ashrae-180" },
+]
+
+[faults.evaporator_fouling]
+title = "Evaporator fouling (low indoor airflow)"
+checks = [
+  { text = "Inspect the air filters and replace them if they are loaded.", source = "ashrae-180" },
+  { text = "Inspect the evaporator coil for dirt and clean it if needed.", source = "ashrae-180" },
+  { text = "Confirm the supply fan and belt are in good condition.", source = "ashrae-180" },
+]
+
+[faults.liquid_line_restriction]
+title = "Liquid-line restriction"
+checks = [
+  { text = "Have a qualified technician measure refrigerant pressures and temperatures, including across the liquid-line filter drier.", source = "ashrae-180" },
+  { text = "Compare the pattern with how the restriction is defined in the reference data set.", source = "lbnl-rtu" },
+]
+
+[faults.suction_line_restriction]
+title = "Suction-line restriction"
+checks = [
+  { text = "Have a qualified technician measure suction pressure and temperature and inspect the suction line for kinks or damage.", source = "ashrae-180" },
+  { text = "Compare the pattern with how the restriction is defined in the reference data set.", source = "lbnl-rtu" },
+]
+
+[faults.refrigerant_overcharge]
+title = "Refrigerant overcharge"
+checks = [
+  { text = "Have a qualified technician verify the refrigerant charge using the manufacturer's charging method.", source = "ashrae-180" },
+]
+
+[faults.refrigerant_undercharge]
+title = "Refrigerant undercharge"
+checks = [
+  { text = "Have a qualified technician verify the refrigerant charge using the manufacturer's charging method.", source = "ashrae-180" },
+  { text = "Have the refrigerant circuit checked for leaks before any charge is added.", source = "ashrae-180" },
+]
+
+[faults.oa_damper_stuck]
+title = "Outdoor-air damper stuck"
+checks = [
+  { text = "Command the outdoor-air damper through its full range and confirm it follows the command.", source = "title24-econ-fdd" },
+  { text = "Inspect the damper blades, linkage and actuator.", source = "ashrae-180" },
+]
+
+[faults.economizer_setpoint_offset]
+title = "Economizer setpoint offset"
+checks = [
+  { text = "Compare the economizer high-limit setpoint in the controller with the design control sequence.", source = "title24-econ-fdd" },
+  { text = "Review the economizer enable logic against the documented sequence of operation.", source = "ashrae-g36" },
+]
+
+[faults.sat_sensor_bias]
+title = "Supply-air temperature sensor bias"
+checks = [
+  { text = "Check the supply-air temperature sensor against a calibrated reference thermometer.", source = "ashrae-180" },
+  { text = "Compare the unit's supply-air reading with the VAV box discharge readings.", source = "ashrae-g36" },
+]

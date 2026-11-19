@@ -1,0 +1,170 @@
+{
+  "schema_version": "1.0.0",
+  "pipeline_version": "0.2.0",
+  "diagnosis_version": "0.1.0",
+  "source": "RTU_sim_condfouling20.csv",
+  "dataset": "simulated",
+  "point_set": "all",
+  "period_start": "2018-10-10T00:00:00",
+  "period_end": "2018-10-28T00:00:00",
+  "hours_total": 433,
+  "hours_scored": 432,
+  "hours_alarmed": 373,
+  "supported_faults": [
+    "condenser_fouling",
+    "evaporator_fouling",
+    "liquid_line_restriction",
+    "refrigerant_overcharge",
+    "refrigerant_undercharge",
+    "suction_line_restriction"
+  ],
+  "library_review_status": "unreviewed",
+  "events": [
+    {
+      "id": "event-3",
+      "start": "2018-10-11T07:00:00",
+      "end": "2018-10-15T01:00:00",
+      "hours": 90,
+      "kind": "fault",
+      "fault": "condenser_fouling",
+      "fault_title": "Condenser fouling",
+      "model": {
+        "answer": "condenser_fouling",
+        "top_class": "condenser_fouling",
+        "confidence": 1.0,
+        "cutoff": 0.4111,
+        "validation_precision": 0.9569,
+        "detector_score": 8.2643,
+        "detector_threshold": 2.1335,
+        "model_family": "lightgbm"
+      },
+      "context": {
+        "running": "compressor",
+        "diagnosable_minutes": 3422,
+        "dominant_mode": "cooling",
+        "outdoor_air_low": 9.999853888888891,
+        "outdoor_air_high": 21.129231111111114
+      },
+      "evidence": [
+        {
+          "id": "ev1",
+          "feature": "resid:refg_disc_pres",
+          "signal": "discharge pressure",
+          "kind": "residual",
+          "unit": "kPa",
+          "observed": 1846.5117617223004,
+          "expected": 1773.0043598892128,
+          "deviation": 4.985723978151638,
+          "normal_low": -0.770972990390582,
+          "normal_high": -0.36109546391675623,
+          "hours": 90,
+          "weight": 898.696
+        },
+        {
+          "id": "ev2",
+          "feature": "resid:sat",
+          "signal": "supply-air temperature",
+          "kind": "residual",
+          "unit": "degC",
+          "observed": 11.105963333333335,
+          "expected": 10.839218473817196,
+          "deviation": 1.0195604547803572,
+          "normal_low": 0.4030900618396896,
+          "normal_high": 0.966222991964184,
+          "hours": 90,
+          "weight": 126.2606
+        },
+        {
+          "id": "ev3",
+          "feature": "med:condensing_approach",
+          "signal": "condensing approach temperature",
+          "kind": "physics",
+          "unit": "K",
+          "observed": 14.994618786839226,
+          "expected": null,
+          "deviation": null,
+          "normal_low": 9.170450119144185,
+          "normal_high": 13.301641997401488,
+          "hours": 90,
+          "weight": 108.1127
+        }
+      ],
+      "checks": [
+        {
+          "text": "Inspect the condenser coil for dirt, debris or blockage and clean it if needed.",
+          "source": "ashrae-180"
+        },
+        {
+          "text": "Confirm the condenser fans run and nothing obstructs airflow across the coil.",
+          "source": "ashrae-180"
+        }
+      ],
+      "statements": [
+        {
+          "kind": "finding",
+          "text": "Likely condenser fouling from 11 Oct 2018 07:00 to 15 Oct 2018 01:00 (90 h). The diagnosis model gave it over 99% confidence; a fault is named only at 41% or above.",
+          "refs": [
+            "event",
+            "model"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Discharge pressure was 1,847 kPa, against 1,773 kPa expected for the same conditions (+5.0 typical errors; on fault-free hours the gap ranged -0.8 to -0.4). This is outside the fault-free range.",
+          "refs": [
+            "ev1"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Supply-air temperature was 11.1 °C, against 10.8 °C expected for the same conditions (+1.0 typical errors; on fault-free hours the gap ranged +0.4 to +1.0). This is within the fault-free range.",
+          "refs": [
+            "ev2"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Condensing approach temperature was 15.0 K; on fault-free hours it ranged 9.2 K to 13.3 K. This is outside the fault-free range.",
+          "refs": [
+            "ev3"
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "The compressor ran steadily for 3,422 minutes in this period, mostly in cooling mode, with outdoor air between 10.0 °C and 21.1 °C.",
+          "refs": [
+            "context"
+          ]
+        },
+        {
+          "kind": "uncertainty",
+          "text": "This is a model inference from sensor patterns, not a confirmed root cause. On validation data, hours named condenser fouling were right 96% of the time.",
+          "refs": [
+            "model"
+          ]
+        },
+        {
+          "kind": "recommended",
+          "text": "Inspect the condenser coil for dirt, debris or blockage and clean it if needed.",
+          "refs": [
+            "ashrae-180"
+          ]
+        },
+        {
+          "kind": "recommended",
+          "text": "Confirm the condenser fans run and nothing obstructs airflow across the coil.",
+          "refs": [
+            "ashrae-180"
+          ]
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "ashrae-180",
+      "citation": "ANSI/ASHRAE/ACCA Standard 180, Standard Practice for Inspection and Maintenance of Commercial Building HVAC Systems",
+      "url": null
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "schema_version": "1.0.0",
+  "pipeline_version": "0.2.0",
+  "diagnosis_version": "0.1.0",
+  "source": "RTU_sim_baseline.csv",
+  "dataset": "simulated",
+  "point_set": "all",
+  "period_start": "2018-10-10T00:00:00",
+  "period_end": "2018-10-28T00:00:00",
+  "hours_total": 433,
+  "hours_scored": 432,
+  "hours_alarmed": 61,
+  "supported_faults": [
+    "condenser_fouling",
+    "evaporator_fouling",
+    "liquid_line_restriction",
+    "refrigerant_overcharge",
+    "refrigerant_undercharge",
+    "suction_line_restriction"
+  ],
+  "library_review_status": "unreviewed",
+  "events": [
+    {
+      "id": "event-17",
+      "start": "2018-10-20T11:00:00",
+      "end": "2018-10-20T21:00:00",
+      "hours": 9,
+      "kind": "fault",
+      "fault": "refrigerant_undercharge",
+      "fault_title": "Refrigerant undercharge",
+      "model": {
+        "answer": "refrigerant_undercharge",
+        "top_class": "refrigerant_undercharge",
+        "confidence": 0.9978,
+        "cutoff": 0.4111,
+        "validation_precision": 0.7518,
+        "detector_score": 3.1733,
+        "detector_threshold": 2.1335,
+        "model_family": "lightgbm"
+      },
+      "context": {
+        "running": "compressor",
+        "diagnosable_minutes": 489,
+        "dominant_mode": "cooling",
+        "outdoor_air_low": 18.458972222222226,
+        "outdoor_air_high": 26.77332777777778
+      },
+      "evidence": [
+        {
+          "id": "ev1",
+          "feature": "resid:power_comp",
+          "signal": "compressor power",
+          "kind": "residual",
+          "unit": "W",
+          "observed": 1900.8341,
+          "expected": 1912.6077608736064,
+          "deviation": -0.5048471008202391,
+          "normal_low": -0.470234028988418,
+          "normal_high": -0.1417277482105559,
+          "hours": 9,
+          "weight": 20.8611
+        },
+        {
+          "id": "ev2",
+          "feature": "resid:sat",
+          "signal": "supply-air temperature",
+          "kind": "residual",
+          "unit": "degC",
+          "observed": 11.53881111111111,
+          "expected": 11.324323473551878,
+          "deviation": 0.8038143165270021,
+          "normal_low": 0.4030900618396896,
+          "normal_high": 0.966222991964184,
+          "hours": 9,
+          "weight": 7.2999
+        },
+        {
+          "id": "ev3",
+          "feature": "med:sensible_heat_ratio",
+          "signal": "sensible heat ratio",
+          "kind": "physics",
+          "unit": "ratio",
+          "observed": 0.89843464992914,
+          "expected": null,
+          "deviation": null,
+          "normal_low": 0.8436998987057605,
+          "normal_high": 0.883051058700846,
+          "hours": 9,
+          "weight": 5.8754
+        }
+      ],
+      "checks": [
+        {
+          "text": "Have a qualified technician verify the refrigerant charge using the manufacturer's charging method.",
+          "source": "ashrae-180"
+        },
+        {
+          "text": "Have the refrigerant circuit checked for leaks before any charge is added.",
+          "source": "ashrae-180"
+        }
+      ],
+      "statements": [
+        {
+          "kind": "finding",
+          "text": "Likely refrigerant undercharge from 20 Oct 2018 11:00 to 20 Oct 2018 21:00 (9 h). The diagnosis model gave it over 99% confidence; a fault is named only at 41% or above.",
+          "refs": [
+            "event",
+            "model"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Compressor power was 1,901 W, against 1,913 W expected for the same conditions (-0.5 typical errors; on fault-free hours the gap ranged -0.5 to -0.1). This is within the fault-free range.",
+          "refs": [
+            "ev1"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Supply-air temperature was 11.5 °C, against 11.3 °C expected for the same conditions (+0.8 typical errors; on fault-free hours the gap ranged +0.4 to +1.0). This is within the fault-free range.",
+          "refs": [
+            "ev2"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Sensible heat ratio was 0.90; on fault-free hours it ranged 0.84 to 0.88. This is outside the fault-free range.",
+          "refs": [
+            "ev3"
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "The compressor ran steadily for 489 minutes in this period, mostly in cooling mode, with outdoor air between 18.5 °C and 26.8 °C.",
+          "refs": [
+            "context"
+          ]
+        },
+        {
+          "kind": "uncertainty",
+          "text": "This is a model inference from sensor patterns, not a confirmed root cause. On validation data, hours named refrigerant undercharge were right 75% of the time.",
+          "refs": [
+            "model"
+          ]
+        },
+        {
+          "kind": "recommended",
+          "text": "Have a qualified technician verify the refrigerant charge using the manufacturer's charging method.",
+          "refs": [
+            "ashrae-180"
+          ]
+        },
+        {
+          "kind": "recommended",
+          "text": "Have the refrigerant circuit checked for leaks before any charge is added.",
+          "refs": [
+            "ashrae-180"
+          ]
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "ashrae-180",
+      "citation": "ANSI/ASHRAE/ACCA Standard 180, Standard Practice for Inspection and Maintenance of Commercial Building HVAC Systems",
+      "url": null
+    }
+  ]
+}

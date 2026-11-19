@@ -1,0 +1,555 @@
+{
+  "$defs": {
+    "Check": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "description": "Id of the Source this check is taken from",
+          "title": "Source",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "source"
+      ],
+      "title": "Check",
+      "type": "object"
+    },
+    "Context": {
+      "additionalProperties": false,
+      "properties": {
+        "diagnosable_minutes": {
+          "description": "Steady minutes with that equipment running",
+          "title": "Diagnosable Minutes",
+          "type": "integer"
+        },
+        "dominant_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Dominant Mode"
+        },
+        "outdoor_air_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Outdoor Air High"
+        },
+        "outdoor_air_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Outdoor Air Low"
+        },
+        "running": {
+          "description": "Equipment the supported faults act on",
+          "title": "Running",
+          "type": "string"
+        }
+      },
+      "required": [
+        "running",
+        "diagnosable_minutes",
+        "dominant_mode",
+        "outdoor_air_low",
+        "outdoor_air_high"
+      ],
+      "title": "Context",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "One signal behind the answer, summarised over the event's diagnosable minutes.",
+      "properties": {
+        "deviation": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Observed minus expected, in typical fault-free errors; residuals only",
+          "title": "Deviation"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Normal-model expectation for the same conditions; residuals only",
+          "title": "Expected"
+        },
+        "feature": {
+          "description": "Model feature, e.g. resid:refg_disc_pres",
+          "title": "Feature",
+          "type": "string"
+        },
+        "hours": {
+          "description": "Event hours in which this signal was available",
+          "title": "Hours",
+          "type": "integer"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "residual",
+            "physics",
+            "rule"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "normal_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "95th percentile, same basis",
+          "title": "Normal High"
+        },
+        "normal_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "5th percentile on fault-free validation hours: of `deviation` for residuals, of `observed` otherwise",
+          "title": "Normal Low"
+        },
+        "observed": {
+          "description": "Median over the event (share of minutes for rules)",
+          "title": "Observed",
+          "type": "number"
+        },
+        "signal": {
+          "description": "Plain name, e.g. discharge pressure",
+          "title": "Signal",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "weight": {
+          "description": "Diagnosis evidence: summed contribution toward the answer (log-odds). Detector evidence: median absolute deviation",
+          "title": "Weight",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "feature",
+        "signal",
+        "kind",
+        "unit",
+        "observed",
+        "hours",
+        "weight"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "FaultEvent": {
+      "additionalProperties": false,
+      "description": "Consecutive alarmed hours with the same answer.",
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/Check"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "context": {
+          "$ref": "#/$defs/Context"
+        },
+        "end": {
+          "description": "End of the last hour (exclusive)",
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "fault": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fault"
+        },
+        "fault_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fault Title"
+        },
+        "hours": {
+          "title": "Hours",
+          "type": "integer"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "fault",
+            "no_supported_fault",
+            "inconclusive",
+            "not_diagnosable"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelOutput"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "statements": {
+          "items": {
+            "$ref": "#/$defs/Statement"
+          },
+          "title": "Statements",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "start",
+        "end",
+        "hours",
+        "kind",
+        "fault",
+        "fault_title",
+        "model",
+        "context",
+        "evidence",
+        "checks",
+        "statements"
+      ],
+      "title": "FaultEvent",
+      "type": "object"
+    },
+    "ModelOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "answer": {
+          "description": "Fault name, or the answer kind when no fault is named",
+          "title": "Answer",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Median hourly probability of top_class",
+          "title": "Confidence"
+        },
+        "cutoff": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Confidence needed to name a fault",
+          "title": "Cutoff"
+        },
+        "detector_score": {
+          "description": "Highest hourly detector score in the event",
+          "title": "Detector Score",
+          "type": "number"
+        },
+        "detector_threshold": {
+          "title": "Detector Threshold",
+          "type": "number"
+        },
+        "model_family": {
+          "title": "Model Family",
+          "type": "string"
+        },
+        "top_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Most likely class before the confidence cut-off",
+          "title": "Top Class"
+        },
+        "validation_precision": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Share of validation hours named as this fault that really were it",
+          "title": "Validation Precision"
+        }
+      },
+      "required": [
+        "answer",
+        "top_class",
+        "confidence",
+        "cutoff",
+        "validation_precision",
+        "detector_score",
+        "detector_threshold",
+        "model_family"
+      ],
+      "title": "ModelOutput",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "description": "A published reference a recommended check rests on.",
+      "properties": {
+        "citation": {
+          "title": "Citation",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        }
+      },
+      "required": [
+        "id",
+        "citation"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Statement": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "finding",
+            "measured",
+            "context",
+            "uncertainty",
+            "recommended"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Refs",
+          "type": "array"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "text",
+        "refs"
+      ],
+      "title": "Statement",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/meetmali/FaultIQ/diagnostic-result/1.0.0",
+  "additionalProperties": false,
+  "properties": {
+    "dataset": {
+      "title": "Dataset",
+      "type": "string"
+    },
+    "diagnosis_version": {
+      "title": "Diagnosis Version",
+      "type": "string"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/FaultEvent"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "hours_alarmed": {
+      "title": "Hours Alarmed",
+      "type": "integer"
+    },
+    "hours_scored": {
+      "description": "Hours with enough steady minutes to score",
+      "title": "Hours Scored",
+      "type": "integer"
+    },
+    "hours_total": {
+      "title": "Hours Total",
+      "type": "integer"
+    },
+    "library_review_status": {
+      "description": "Whether an HVAC professional has reviewed the fault library's checks",
+      "title": "Library Review Status",
+      "type": "string"
+    },
+    "period_end": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Period End"
+    },
+    "period_start": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Period Start"
+    },
+    "pipeline_version": {
+      "title": "Pipeline Version",
+      "type": "string"
+    },
+    "point_set": {
+      "title": "Point Set",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "description": "Input file name",
+      "title": "Source",
+      "type": "string"
+    },
+    "sources": {
+      "description": "Every source cited by a check in this result",
+      "items": {
+        "$ref": "#/$defs/Source"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "supported_faults": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Supported Faults",
+      "type": "array"
+    }
+  },
+  "required": [
+    "pipeline_version",
+    "diagnosis_version",
+    "source",
+    "dataset",
+    "point_set",
+    "period_start",
+    "period_end",
+    "hours_total",
+    "hours_scored",
+    "hours_alarmed",
+    "supported_faults",
+    "library_review_status",
+    "events",
+    "sources"
+  ],
+  "title": "DiagnosticResult",
+  "type": "object"
+}

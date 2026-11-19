@@ -73,14 +73,14 @@ log = logging.getLogger("faultiq.diagnosis")
 Fold = tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]
 
 
-def _fit_models(normal: pl.DataFrame, config: dict[str, Any]) -> dict[str, d.NormalModel]:
+def fit_normal_models(normal: pl.DataFrame, config: dict[str, Any]) -> dict[str, d.NormalModel]:
     return {
         ps: d.NormalModel(list(config[ps]["inputs"]), list(config[ps]["targets"])).fit(normal)
         for ps in POINT_SETS
     }
 
 
-def _windows(
+def build_windows(
     minutes: pl.DataFrame,
     dataset: str,
     models: dict[str, d.NormalModel],
@@ -105,7 +105,7 @@ def _windows(
     )
 
 
-def _crossfit(
+def crossfit_windows(
     groups: list[pl.DataFrame],
     dataset: str,
     config: dict[str, Any],
@@ -119,7 +119,7 @@ def _crossfit(
     out = []
     for i, part in enumerate(groups):
         others = pl.concat([g for j, g in enumerate(groups) if j != i], how="diagonal_relaxed")
-        out.append(_windows(part, dataset, _fit_models(others, config), rules))
+        out.append(build_windows(part, dataset, fit_normal_models(others, config), rules))
     return pl.concat(out, how="diagonal_relaxed")
 
 
@@ -249,18 +249,18 @@ def run_simulated(processed: Path) -> dict[str, Any]:
     ]
     baseline = next(e for e in entries if e["label"]["fault"] == NORMAL)
     normal = _load(processed, baseline).filter(sim_split(pl.col("window_start")) == "train")
-    models = _fit_models(normal, d.SIM_MODEL)
+    models = fit_normal_models(normal, d.SIM_MODEL)
     tables = []
     for e in entries:
         log.info("featurising", extra={"file": e["source_file"]})
-        w = _windows(_load(processed, e), "simulated", models, None)
+        w = build_windows(_load(processed, e), "simulated", models, None)
         if e is baseline:  # its training hours are replaced by out-of-fold ones below
             w = w.filter(sim_split(pl.col("window_start")) != "train")
         tables.append(w)
     day = (pl.col("window_start") - pl.lit(SIM_START)).dt.total_days()
     half = SIM_BLOCKS["train"][1] // 2
     halves = [normal.filter(day < half), normal.filter(day >= half)]
-    tables.append(_crossfit(halves, "simulated", d.SIM_MODEL, None))
+    tables.append(crossfit_windows(halves, "simulated", d.SIM_MODEL, None))
     windows = pl.concat(tables, how="diagonal_relaxed").with_columns(
         split=sim_split(pl.col("window_start"))
     )
@@ -298,15 +298,19 @@ def run_experimental(processed: Path) -> dict[str, Any]:
             for s, r in roles.items()
             if r == "train"
         ]
-        models = _fit_models(pl.concat(normal_by_season, how="diagonal_relaxed"), d.EXP_MODEL)
+        models = fit_normal_models(pl.concat(normal_by_season, how="diagonal_relaxed"), d.EXP_MODEL)
         rules = d.EconomizerRules("all")
         by_role: dict[str, list[pl.DataFrame]] = {"train": [], "val": [], "test": []}
         for season, role in roles.items():
             for e in by_season[season]:
                 if role == "train" and e["label"]["fault"] == NORMAL:
                     continue  # replaced by out-of-fold windows below
-                by_role[role].append(_windows(_load(processed, e), "experimental", models, rules))
-        by_role["train"].append(_crossfit(normal_by_season, "experimental", d.EXP_MODEL, rules))
+                by_role[role].append(
+                    build_windows(_load(processed, e), "experimental", models, rules)
+                )
+        by_role["train"].append(
+            crossfit_windows(normal_by_season, "experimental", d.EXP_MODEL, rules)
+        )
         train, val, test = (pl.concat(by_role[r], how="diagonal_relaxed") for r in by_role)
         log.info("fold ready", extra={"test_season": test_season, "train_windows": train.height})
         for ps in POINT_SETS:

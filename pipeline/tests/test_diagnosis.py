@@ -7,7 +7,7 @@ from faultiq.detection import detectors as d
 from faultiq.detection.windows import MIN_MINUTES, add_minute_context, window_table
 from faultiq.diagnosis.classify import INCONCLUSIVE, MIN_NAMED, Classifier, decide, tune_cutoff
 from faultiq.diagnosis.evaluate import answers, calibration_error, macro_f1
-from faultiq.diagnosis.experiment import NOT_DIAGNOSABLE, _crossfit, end_to_end
+from faultiq.diagnosis.experiment import NOT_DIAGNOSABLE, crossfit_windows, end_to_end
 from faultiq.diagnosis.features import (
     NORMAL,
     feature_columns,
@@ -77,7 +77,7 @@ def test_crossfit_scores_normal_hours_with_a_model_that_never_saw_them() -> None
     warm = pl.int_range(pl.len()) >= 1200
     frame = frame.with_columns(pl.when(warm).then(pl.col("sat") + 1.0).otherwise(pl.col("sat")))
     halves = [frame[:1200], frame[1200:]]
-    out = _crossfit(halves, "simulated", SIM_CFG, None).sort("window_start")
+    out = crossfit_windows(halves, "simulated", SIM_CFG, None).sort("window_start")
     assert out.height == window_table(frame).height
     both = d.NormalModel(["oat", "rat", "comp_stage"], ["sat"]).fit(frame)
     in_w = window_features(frame, "simulated", {"basic": both, "all": both}).sort("window_start")
@@ -116,6 +116,17 @@ def test_both_candidates_learn_and_explain_with_the_right_feature() -> None:
         tops = np.array(clf.top_feature(x, p))
         assert (tops[y == "a"] == "resid:a_signal").mean() > 0.9
         assert (tops[y == "b"] == "resid:b_signal").mean() > 0.9
+
+
+def test_contributions_work_with_only_two_classes() -> None:
+    """A unit that supports one fault has two classes; both libraries then store one set."""
+    x, y = _separable()
+    keep = y != "b"
+    for fam in ("logistic", "lightgbm"):
+        clf = Classifier(fam, ["resid:a_signal", "resid:b_signal", "noise"]).fit(x[keep], y[keep])
+        p = clf.proba(x[keep])
+        tops = np.array(clf.top_feature(x[keep], p))
+        assert (tops[y[keep] == "a"] == "resid:a_signal").mean() > 0.9
 
 
 def test_cutoff_is_the_lowest_confidence_that_meets_the_target() -> None:

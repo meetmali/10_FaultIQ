@@ -27,5 +27,6 @@ When a decision changes, write a new ADR that supersedes the old one. Don't rewr
 | [0020](0020-preprocessing-contract.md) | Preprocessing contract: no filling, steady state by delay, physics features only | Accepted |
 | [0021](0021-detection-methodology.md) | Detection methodology and Phase 3 results | Accepted |
 | [0022](0022-diagnosis-methodology.md) | Diagnosis methodology and Phase 4 results | Accepted |
+| [0023](0023-explanations.md) | Evidence-grounded explanations and the diagnostic result contract | Accepted |
 
 Template: copy [`template.md`](template.md).

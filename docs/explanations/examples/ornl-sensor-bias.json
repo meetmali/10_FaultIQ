@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.0.0",
+  "pipeline_version": "0.2.0",
+  "diagnosis_version": "0.1.0",
+  "source": "SA_temp_bias_4_Summer_2021.csv",
+  "dataset": "experimental",
+  "point_set": "all",
+  "period_start": "2021-06-10T00:00:00",
+  "period_end": "2021-06-10T23:59:00",
+  "hours_total": 24,
+  "hours_scored": 15,
+  "hours_alarmed": 15,
+  "supported_faults": [
+    "economizer_setpoint_offset",
+    "oa_damper_stuck",
+    "sat_sensor_bias"
+  ],
+  "library_review_status": "unreviewed",
+  "events": [
+    {
+      "id": "event-1",
+      "start": "2021-06-10T07:00:00",
+      "end": "2021-06-10T22:00:00",
+      "hours": 15,
+      "kind": "fault",
+      "fault": "sat_sensor_bias",
+      "fault_title": "Supply-air temperature sensor bias",
+      "model": {
+        "answer": "sat_sensor_bias",
+        "top_class": "sat_sensor_bias",
+        "confidence": 0.9989,
+        "cutoff": 0.9241,
+        "validation_precision": 1.0,
+        "detector_score": 28.5039,
+        "detector_threshold": 14.8509,
+        "model_family": "logistic"
+      },
+      "context": {
+        "running": "supply fan",
+        "diagnosable_minutes": 884,
+        "dominant_mode": "cooling",
+        "outdoor_air_low": 21.694444444444443,
+        "outdoor_air_high": 26.327777777777776
+      },
+      "evidence": [
+        {
+          "id": "ev1",
+          "feature": "rule:sat_disagrees_with_vav",
+          "signal": "supply-air reading disagreeing with the VAV boxes",
+          "kind": "rule",
+          "unit": "share",
+          "observed": 1.0,
+          "expected": null,
+          "deviation": null,
+          "normal_low": null,
+          "normal_high": null,
+          "hours": 15,
+          "weight": 84.5853
+        },
+        {
+          "id": "ev2",
+          "feature": "resid:sat",
+          "signal": "supply-air temperature",
+          "kind": "residual",
+          "unit": "degC",
+          "observed": 12.76666666666667,
+          "expected": 12.822430374220966,
+          "deviation": -0.2108688162205531,
+          "normal_low": 0.13273373749351133,
+          "normal_high": 0.3594346661736294,
+          "hours": 15,
+          "weight": 3.0013
+        },
+        {
+          "id": "ev3",
+          "feature": "resid:vav_sat_min",
+          "signal": "coldest VAV discharge temperature",
+          "kind": "residual",
+          "unit": "degC",
+          "observed": 9.311111111111108,
+          "expected": 12.936929885587382,
+          "deviation": -27.2053498663435,
+          "normal_low": 0.37646988272776627,
+          "normal_high": 1.33005359153738,
+          "hours": 15,
+          "weight": 2.4733
+        }
+      ],
+      "checks": [
+        {
+          "text": "Check the supply-air temperature sensor against a calibrated reference thermometer.",
+          "source": "ashrae-180"
+        },
+        {
+          "text": "Compare the unit's supply-air reading with the VAV box discharge readings.",
+          "source": "ashrae-g36"
+        }
+      ],
+      "statements": [
+        {
+          "kind": "finding",
+          "text": "Likely supply-air temperature sensor bias from 10 Jun 2021 07:00 to 10 Jun 2021 22:00 (15 h). The diagnosis model gave it over 99% confidence; a fault is named only at 92% or above.",
+          "refs": [
+            "event",
+            "model"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Supply-air reading disagreeing with the VAV boxes in 100% of applicable minutes.",
+          "refs": [
+            "ev1"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Supply-air temperature was 12.8 °C, against 12.8 °C expected for the same conditions (-0.2 typical errors; on fault-free hours the gap ranged +0.1 to +0.4). This is outside the fault-free range.",
+          "refs": [
+            "ev2"
+          ]
+        },
+        {
+          "kind": "measured",
+          "text": "Coldest VAV discharge temperature was 9.3 °C, against 12.9 °C expected for the same conditions (-27.2 typical errors; on fault-free hours the gap ranged +0.4 to +1.3). This is outside the fault-free range.",
+          "refs": [
+            "ev3"
+          ]
+        },
+        {
+          "kind": "context",
+          "text": "The supply fan ran steadily for 884 minutes in this period, mostly in cooling mode, with outdoor air between 21.7 °C and 26.3 °C.",
+          "refs": [
+            "context"
+          ]
+        },
+        {
+          "kind": "uncertainty",
+          "text": "This is a model inference from sensor patterns, not a confirmed root cause. On validation data, hours named supply-air temperature sensor bias were right over 99% of the time.",
+          "refs": [
+            "model"
+          ]
+        },
+        {
+          "kind": "recommended",
+          "text": "Check the supply-air temperature sensor against a calibrated reference thermometer.",
+          "refs": [
+            "ashrae-180"
+          ]
+        },
+        {
+          "kind": "recommended",
+          "text": "Compare the unit's supply-air reading with the VAV box discharge readings.",
+          "refs": [
+            "ashrae-g36"
+          ]
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "ashrae-180",
+      "citation": "ANSI/ASHRAE/ACCA Standard 180, Standard Practice for Inspection and Maintenance of Commercial Building HVAC Systems",
+      "url": null
+    },
+    {
+      "id": "ashrae-g36",
+      "citation": "ASHRAE Guideline 36, High-Performance Sequences of Operation for HVAC Systems (automated fault detection and diagnostics)",
+      "url": null
+    }
+  ]
+}
