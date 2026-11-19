@@ -118,6 +118,10 @@ Detection baselines (Phase 3) and their held-out results: [docs/detection-report
 and [ADR 0021](docs/decisions/0021-detection-methodology.md). Rebuild them with
 `cd pipeline && uv run python -I ../scripts/detection_report.py ../data/processed/v0.2.0 --json ../docs/detection/results.json --out ../docs/detection-report.md`.
 
+Known-fault diagnosis (Phase 4): [docs/diagnosis-report.md](docs/diagnosis-report.md), the
+[model card](docs/model-card.md) and [ADR 0022](docs/decisions/0022-diagnosis-methodology.md). Rebuild with
+`cd pipeline && uv run python -I ../scripts/diagnosis_report.py ../data/processed/v0.2.0 --json ../docs/diagnosis/results.json --out ../docs/diagnosis-report.md`.
+
 ## Deploying (public demo or self-hosting)
 
 One production setup serves both purposes. Set `DEMO_MODE=true` for a read-only, sample-data demo, or `false`

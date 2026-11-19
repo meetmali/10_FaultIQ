@@ -252,6 +252,27 @@ class NormalModel:
             out[f"expected:{t}"] = pl.Series(np.where(complete, pred, np.nan)).fill_nan(None)
         return pl.DataFrame(out)
 
+    def residuals(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Signed (observed - expected) / typical error per target, `resid:<target>` columns.
+
+        The sign carries the diagnosis: low suction pressure and high suction pressure are
+        different faults with the same detection score. Null outside the training envelope.
+        """
+        if not self.models:
+            return pl.DataFrame()
+        prepared = self._prepare(df)
+        expected = self.expected(prepared)
+        signed = pl.DataFrame(
+            [
+                ((prepared[t] - expected[f"expected:{t}"]) / self.scales[t]).alias(f"resid:{t}")
+                for t in self.models
+            ]
+        )
+        inside = prepared.select(within(self.envelope).alias("_ok"))["_ok"]
+        return signed.with_columns(inside).select(
+            [pl.when(pl.col("_ok")).then(pl.col(c)).alias(c) for c in signed.columns]
+        )
+
     def score(self, df: pl.DataFrame) -> pl.DataFrame:
         prepared = self._prepare(df)
         expected = self.expected(prepared)
