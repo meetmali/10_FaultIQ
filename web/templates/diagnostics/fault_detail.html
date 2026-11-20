@@ -1,4 +1,5 @@
-{% extends "base.html" %}{% block title %}{{ fault.name }}{% endblock %}
-{% block content %}<hgroup><h2>{{ fault.name }}</h2><p>{{ fault.component }}</p></hgroup>
-<article><h5>Symptoms</h5><p>{{ fault.symptoms }}</p><h5>Likely causes</h5><p>{{ fault.causes }}</p><h5>What to check</h5><p>{{ fault.checks }}</p></article>
-<a href="{% url 'fault_list' %}">Back to the library</a>{% endblock %}
+{% extends "base.html" %}{% load faultiq %}{% block title %}{{ fault.name }}{% endblock %}
+{% block content %}<p><a href="{% url 'fault_list' %}">← Fault library</a></p>
+<div class="grid g-hero"><div class="card">{% rtu "fault" fault.code fault.name %}</div>
+<div class="card"><h1>{{ fault.name }}</h1><p class="muted">{{ fault.component }}</p><h3>Symptoms</h3><p>{{ fault.symptoms }}</p><h3>Likely causes</h3><p>{{ fault.causes }}</p><h3>What to check</h3><p>{{ fault.checks }}</p></div></div>
+{% endblock %}

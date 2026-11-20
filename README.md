@@ -25,6 +25,8 @@ using the fault library and the team's confirmed past cases.
 3. **Review workflow and portfolio dashboard.** Confirm or reject events with notes (confirmed notes feed the
    assistant), dashboard with fault-hour chart, filters, CSV export and a JSON API.
 4. **Sites and units management** (create, edit, delete) and a searchable fault library.
+5. **Operator-style interface** ported from the earlier FaultIQ React UI: the same design tokens, light and dark
+   themes, a fleet health ring, and an animated isometric rooftop unit that highlights the faulty part.
 
 ## Run it locally
 
@@ -40,8 +42,10 @@ python manage.py seed_demo --password demo-pass-2026   # optional demo user "dem
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000, log in as `demo` (or sign up), open **RTU-1**, and upload
-`web/sample_data/rtu_faulty.csv` or `rtu_healthy.csv`.
+Open http://127.0.0.1:8000 and sign up (or log in as `demo`). **No upload is needed:** every account starts
+with a sample portfolio of 6 rooftop units on 2 sites, generated from synthetic trend data and already analysed
+(4 units with injected faults, 2 without, one fault already confirmed by a technician). You can still upload
+your own export, or `web/sample_data/rtu_faulty.csv`, on any unit page.
 
 **Environment variables** (all optional locally; see [web/.env.example](web/.env.example)): `DJANGO_DEBUG`,
 `DJANGO_SECRET_KEY` (required when `DJANGO_DEBUG=0`), `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL` (default SQLite
@@ -51,7 +55,7 @@ downloads from Hugging Face on first use; `HF_TOKEN` is optional and only raises
 
 ## Using the AI
 
-- **Detection:** open a unit, upload a CSV. Required columns: `timestamp, oat, rat, mat, sat, sat_sp,
+- **Detection:** results for the sample units are already on the Overview and unit pages. To run it again, open a unit and upload a CSV. Required columns: `timestamp, oat, rat, mat, sat, sat_sp,
   damper_pct, cooling_pct, fan_on` (temperatures in °C, percentages 0 to 100, fan 0 or 1).
 - **Assistant:** the **AI assistant** page, or **Ask the AI assistant** on any fault event page. JSON:
   `POST /api/assistant/` with `{"text": "..."}` (logged-in session).
@@ -60,7 +64,7 @@ downloads from Hugging Face on first use; `HF_TOKEN` is optional and only raises
 
 ```bash
 cd web
-python manage.py test diagnostics    # 9 tests: workflow, validation, permissions, pages, API
+python manage.py test diagnostics    # 10 tests: workflow, validation, permissions, pages, API, sample data
 python manage.py evaluate            # the evaluation tables in docs/P2_REPORT.md
 python manage.py make_sample         # regenerate the synthetic sample CSVs
 ```

@@ -1,31 +1,52 @@
-{% extends "base.html" %}{% block title %}Dashboard{% endblock %}
+{% extends "base.html" %}{% load faultiq %}{% block title %}Overview{% endblock %}
 {% block content %}
-<h2>Portfolio overview</h2>
-<div class="stats">
-  <article><b>{{ stats.units }}</b>Units</article><article><b>{{ stats.analyses }}</b>Analyses</article>
-  <article><b>{{ stats.events }}</b>Fault events</article><article><b>{{ stats.unreviewed }}</b>Waiting for review</article>
-  <article><b>{{ stats.confirmed }}</b>Confirmed</article>
+<div class="grid g-hero">
+  <div class="card hero">
+    {% health_ring stats.healthy stats.units "no named fault" %}
+    <div>
+      <h1>{% if stats.faults %}{{ stats.faults }} of {{ stats.units }} units have a fault{% else %}All units look healthy{% endif %}</h1>
+      <p class="muted">{{ stats.fault_hours }} hours in fault events in the latest analyses · {{ stats.unreviewed }} events waiting for a technician · {{ stats.confirmed }} confirmed</p>
+      <a class="btn sm" href="{% url 'event_list' %}?status=unreviewed">Review faults</a> <a class="btn ghost sm" href="{% url 'assistant' %}">Ask the AI assistant</a>
+    </div>
+  </div>
+  <div class="card"><div class="card-head"><h2>Fault hours by type</h2><a href="{% url 'api_summary' %}"><small>JSON</small></a></div>
+    {% if by_fault %}<div style="height:170px"><canvas id="faultChart" aria-label="Bar chart of fault hours by fault type"></canvas></div>
+    {% else %}<p class="empty">No fault events.</p>{% endif %}
+  </div>
 </div>
-<div class="grid">
-  <article><header>Fault hours by type</header>
-    {% if by_fault %}<canvas id="faultChart" height="220" aria-label="Bar chart of fault hours by fault type"></canvas>
-    <table><tbody>{% for r in by_fault %}<tr><td>{{ r.fault_type__name|default:"Unclassified anomaly" }}</td><td>{{ r.n }} events</td><td>{{ r.hours }} h</td></tr>{% endfor %}</tbody></table>
-    {% else %}<p>No fault events yet. Upload a trend export on a unit page.</p>{% endif %}
-  </article>
-  <article><header>Biggest unreviewed faults</header>
-    {% for e in recent %}<p><a href="{{ e.get_absolute_url }}">{{ e.label }}</a><br><small>{{ e.analysis.unit }} · {{ e.hours }} h · confidence {{ e.confidence|floatformat:2 }}</small></p>
-    {% empty %}<p>Nothing waiting.</p>{% endfor %}
-  </article>
+
+{% if attention %}
+<h2 style="margin:6px 0 12px">Needs attention</h2>
+<div class="units" style="margin-bottom:24px">
+  {% for h in attention %}
+  <a class="unit-card {{ h.state }}" href="{{ h.unit.get_absolute_url }}">
+    {% rtu h.state h.top.fault_type.code h.unit.name "card" %}
+    <div class="row"><b>{{ h.unit.name }}</b><span class="badge s-{{ h.state }}">{{ h.label }}</span></div>
+    <div class="muted" style="font-size:.88rem">{{ h.top.label }} · {{ h.fault_hours }} h · {{ h.unit.site.name }}</div>
+  </a>
+  {% endfor %}
 </div>
-<article><header>Units <a href="{% url 'unit_create' %}" style="float:right">+ Add unit</a> <a href="{% url 'site_create' %}" style="float:right;margin-right:1rem">+ Add site</a></header>
-  <table><thead><tr><th>Site</th><th>Unit</th><th>Tons</th><th>Fault events</th></tr></thead><tbody>
-  {% for u in units %}<tr><td>{{ u.site.name }}</td><td><a href="{{ u.get_absolute_url }}">{{ u.name }}</a></td><td>{{ u.tonnage|default:"-" }}</td><td>{{ u.n_events }}</td></tr>
-  {% empty %}<tr><td colspan="4">No units yet. <a href="{% url 'site_create' %}">Add a site</a> to start.</td></tr>{% endfor %}
-  </tbody></table>
-  <a href="{% url 'events_csv' %}">Export all events (CSV)</a> · <a href="{% url 'api_summary' %}">Summary (JSON API)</a>
-</article>
+{% endif %}
+
+<div class="card"><div class="card-head"><h2>Fleet</h2><span><a class="btn ghost sm" href="{% url 'site_create' %}">+ Site</a> <a class="btn ghost sm" href="{% url 'unit_create' %}">+ Unit</a> <a class="btn ghost sm" href="{% url 'events_csv' %}">Export CSV</a></span></div>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>Unit</th><th>Site</th><th>Status</th><th>Main finding</th><th style="width:170px">Anomalous hours</th><th>Events</th></tr></thead>
+  <tbody>{% for h in health %}<tr>
+    <td style="width:70px">{% rtu h.state h.top.fault_type.code h.unit.name "thumb" %}</td>
+    <td><a href="{{ h.unit.get_absolute_url }}"><b>{{ h.unit.name }}</b></a>{% if h.unit.tonnage %}<br><small>{{ h.unit.tonnage }} tons</small>{% endif %}</td>
+    <td>{{ h.unit.site.name }}<br><small>{{ h.unit.site.city }}</small></td>
+    <td><span class="badge s-{{ h.state }}">{{ h.label }}</span></td>
+    <td>{{ h.top.label|default:"-" }}</td>
+    <td><div class="bar"><i style="width:{{ h.share }}%"></i></div><small>{{ h.share }}% of running hours</small></td>
+    <td>{{ h.events|length }}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+{% if not has_sample %}<form method="post" action="{% url 'load_sample' %}" style="margin-top:12px">{% csrf_token %}<button class="btn ghost sm">Load the sample portfolio</button></form>{% endif %}
+</div>
 {% endblock %}
 {% block scripts %}{% if by_fault %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script>const d={{ chart|safe }};new Chart(document.getElementById('faultChart'),{type:'bar',data:{labels:d.labels,datasets:[{label:'Hours',data:d.hours,backgroundColor:'#0284c7'}]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});</script>
+<script>const d={{ chart|safe }};let c;function draw(){c&&c.destroy();Chart.defaults.color=fqVar("--muted");Chart.defaults.borderColor=fqVar("--line");
+c=new Chart(document.getElementById("faultChart"),{type:"bar",data:{labels:d.labels,datasets:[{label:"Hours",data:d.hours,backgroundColor:fqVar("--fault-glow"),borderRadius:4}]},options:{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false}}}})}
+draw();addEventListener("fq-theme",draw);</script>
 {% endif %}{% endblock %}

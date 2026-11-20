@@ -12,7 +12,15 @@ from django.views.decorators.http import require_GET, require_POST
 from .ai.assistant import AssistantError
 from .forms import AssistantForm, ReviewForm, SignUpForm, SiteForm, UnitForm, UploadForm
 from .models import Analysis, AssistantQuery, FaultEvent, FaultType, Site, Unit
+from .sample import load_sample_portfolio
 from .services import over_rate_limit, run_analysis, run_assistant
+
+STATE_LABEL = {"fault": "Fault", "unclear": "Check", "normal": "Healthy", "off": "No data"}
+EXAMPLES = [
+    "Supply air stays warm even though the compressor runs at 100% on hot afternoons",
+    "Outdoor air damper stays shut on cool mornings while the compressor runs",
+    "Mixed air temperature reads hotter than both outdoor and return air",
+]
 
 
 # ---------- ownership helpers: every query is scoped to the signed-in user ----------
@@ -22,6 +30,18 @@ def _units(user):
 
 def _events(user):
     return FaultEvent.objects.filter(analysis__unit__site__owner=user).select_related("fault_type", "analysis__unit__site")
+
+
+def unit_health(unit):
+    """Status of a unit from its latest analysis: fault (named fault), unclear (unexplained only), normal, off."""
+    analysis = unit.analyses.filter(status=Analysis.Status.DONE).first()
+    events = list(analysis.events.exclude(review_status=FaultEvent.Review.REJECTED).select_related("fault_type")) if analysis else []
+    named = sorted((e for e in events if e.fault_type), key=lambda e: -e.hours)
+    state = "off" if analysis is None else "fault" if named else "unclear" if events else "normal"
+    top = named[0] if named else (events[0] if events else None)
+    share = analysis.anomaly_hours / analysis.hours_analysed if analysis and analysis.hours_analysed else 0
+    return {"unit": unit, "analysis": analysis, "state": state, "label": STATE_LABEL[state], "top": top,
+            "events": events, "fault_hours": sum(e.hours for e in events), "share": round(share * 100)}
 
 
 # ---------- public pages ----------
@@ -36,7 +56,8 @@ def signup(request):
     if request.method == "POST" and form.is_valid():
         user = form.save()
         login(request, user)
-        messages.success(request, "Account created. Add a site and a unit to get started.")
+        load_sample_portfolio(user)
+        messages.success(request, "Account created. A sample portfolio of six rooftop units is loaded and analysed.")
         return redirect("dashboard")
     return render(request, "registration/signup.html", {"form": form})
 
@@ -60,26 +81,33 @@ def fault_detail(request, code):
 # ---------- dashboard ----------
 @login_required
 def dashboard(request):
+    if not Unit.objects.filter(site__owner=request.user).exists():
+        load_sample_portfolio(request.user)
     events = _events(request.user)
-    by_fault = (
-        events.values("fault_type__name").annotate(n=Count("id"), hours=Sum("hours")).order_by("-hours")
-    )
+    by_fault = events.exclude(review_status=FaultEvent.Review.REJECTED).values("fault_type__name").annotate(n=Count("id"), hours=Sum("hours")).order_by("-hours")
+    health = [unit_health(u) for u in _units(request.user)]
+    attention = sorted((h for h in health if h["state"] in ("fault", "unclear")), key=lambda h: (h["state"] != "fault", -h["fault_hours"]))
     stats = {
-        "units": _units(request.user).count(),
-        "analyses": Analysis.objects.filter(unit__site__owner=request.user).count(),
-        "events": events.count(),
+        "units": len(health),
+        "healthy": sum(h["state"] != "fault" for h in health),
+        "faults": sum(h["state"] == "fault" for h in health),
+        "fault_hours": sum(h["fault_hours"] for h in health),
         "unreviewed": events.filter(review_status=FaultEvent.Review.UNREVIEWED).count(),
         "confirmed": events.filter(review_status=FaultEvent.Review.CONFIRMED).count(),
     }
-    chart = {
-        "labels": [r["fault_type__name"] or "Unclassified anomaly" for r in by_fault],
-        "hours": [r["hours"] for r in by_fault],
-    }
+    chart = {"labels": [r["fault_type__name"] or "Unclassified anomaly" for r in by_fault], "hours": [r["hours"] for r in by_fault]}
     return render(request, "diagnostics/dashboard.html", {
-        "stats": stats, "by_fault": by_fault, "chart": json.dumps(chart),
-        "units": _units(request.user).annotate(n_events=Count("analyses__events")),
-        "recent": events.filter(review_status=FaultEvent.Review.UNREVIEWED).order_by("-hours")[:8],
+        "stats": stats, "health": health, "attention": attention, "by_fault": by_fault, "chart": json.dumps(chart),
+        "has_sample": Site.objects.filter(owner=request.user, name="Campus North").exists(),
     })
+
+
+@login_required
+@require_POST
+def load_sample(request):
+    load_sample_portfolio(request.user)
+    messages.success(request, "Sample portfolio loaded: six units with analyses already run.")
+    return redirect("dashboard")
 
 
 # ---------- sites and units (CRUD) ----------
@@ -140,7 +168,9 @@ def unit_detail(request, pk):
         else:
             messages.error(request, f"Analysis failed: {analysis.error}")
         return redirect(analysis)
-    return render(request, "diagnostics/unit_detail.html", {"unit": unit, "form": form, "analyses": unit.analyses.annotate(n=Count("events"))})
+    return render(request, "diagnostics/unit_detail.html", {
+        "unit": unit, "form": form, "h": unit_health(unit), "analyses": unit.analyses.annotate(n=Count("events")),
+    })
 
 
 @login_required
@@ -193,7 +223,7 @@ def assistant_view(request):
             except Exception:
                 messages.error(request, "The AI assistant is unavailable right now. The fault library still works.")
     history = AssistantQuery.objects.filter(user=request.user)[:5]
-    return render(request, "diagnostics/assistant.html", {"form": form, "result": result, "event": event, "history": history})
+    return render(request, "diagnostics/assistant.html", {"form": form, "result": result, "event": event, "history": history, "examples": EXAMPLES})
 
 
 # ---------- data features: CSV export and JSON API ----------

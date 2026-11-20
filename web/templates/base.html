@@ -1,44 +1,40 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}FaultIQ{% endblock %} | FaultIQ</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
-  <style>
-    .badge{display:inline-block;padding:.1rem .5rem;border-radius:1rem;font-size:.8rem;background:var(--pico-muted-border-color)}
-    .badge.confirmed{background:#bbf7d0;color:#14532d}.badge.rejected{background:#fecaca;color:#7f1d1d}.badge.unreviewed{background:#fde68a;color:#78350f}
-    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
-    .stats article{margin:0;text-align:center}.stats b{display:block;font-size:2rem}
-    .msg{padding:.75rem 1rem;border-radius:.5rem;margin-bottom:1rem;background:#e0f2fe;color:#0c4a6e}.msg.error{background:#fee2e2;color:#7f1d1d}.msg.success{background:#dcfce7;color:#14532d}
-    nav .brand{font-weight:700}
-  </style>
-  {% block head %}{% endblock %}
+  <script>try{const t=localStorage.getItem("fq-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="stylesheet" href="{% static 'faultiq.css' %}">
 </head>
 <body>
-<header class="container">
-  <nav>
-    <ul><li><a href="{% url 'home' %}" class="brand">FaultIQ</a></li></ul>
-    <ul>
-      {% if user.is_authenticated %}
-        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-        <li><a href="{% url 'event_list' %}">Fault events</a></li>
-        <li><a href="{% url 'assistant' %}">AI assistant</a></li>
-      {% endif %}
-      <li><a href="{% url 'fault_list' %}">Fault library</a></li>
-      {% if user.is_authenticated %}
-        <li><form method="post" action="{% url 'logout' %}" style="margin:0">{% csrf_token %}<button class="secondary outline" style="padding:.3rem .8rem">Log out ({{ user.username }})</button></form></li>
-      {% else %}
-        <li><a href="{% url 'login' %}">Log in</a></li><li><a href="{% url 'signup' %}" role="button">Sign up</a></li>
-      {% endif %}
-    </ul>
+<header class="top"><div class="wrap">
+  <a class="brand" href="{% url 'home' %}"><span class="brand-mark" aria-hidden="true">FQ</span>FaultIQ</a>
+  {% with n=request.resolver_match.url_name %}
+  <nav class="main" aria-label="Main">
+    {% if user.is_authenticated %}
+    <a href="{% url 'dashboard' %}" class="{% if n == 'dashboard' or n == 'unit_detail' %}on{% endif %}">Overview</a>
+    <a href="{% url 'event_list' %}" class="{% if n == 'event_list' or n == 'event_detail' %}on{% endif %}">Fault events</a>
+    <a href="{% url 'assistant' %}" class="{% if n == 'assistant' %}on{% endif %}">AI assistant</a>
+    {% endif %}
+    <a href="{% url 'fault_list' %}" class="{% if n == 'fault_list' or n == 'fault_detail' %}on{% endif %}">Fault library</a>
   </nav>
-</header>
-<main class="container">
+  {% endwith %}
+  <div class="tools">
+    <button class="btn ghost sm" type="button" id="theme" aria-label="Switch light or dark theme">◐ Theme</button>
+    {% if user.is_authenticated %}
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn ghost sm">Log out {{ user.username }}</button></form>
+    {% else %}
+      <a class="btn ghost sm" href="{% url 'login' %}">Log in</a><a class="btn sm" href="{% url 'signup' %}">Sign up</a>
+    {% endif %}
+  </div>
+</div></header>
+<main class="wrap">
   {% for m in messages %}<div class="msg {{ m.tags }}" role="status">{{ m }}</div>{% endfor %}
   {% block content %}{% endblock %}
 </main>
-<footer class="container"><small>FaultIQ: fault detection and diagnostics for rooftop HVAC units. MIT licensed.</small></footer>
+<footer><div class="wrap">FaultIQ · fault detection and diagnostics for rooftop HVAC units · sample data is synthetic · MIT licence</div></footer>
+<script>document.getElementById("theme").onclick=()=>{const d=document.documentElement,t=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=t;try{localStorage.setItem("fq-theme",t)}catch(e){};window.dispatchEvent(new Event("fq-theme"))}
+function fqVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

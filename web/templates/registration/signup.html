@@ -1,3 +1,4 @@
 {% extends "base.html" %}{% block title %}Sign up{% endblock %}
-{% block content %}<article style="max-width:480px;margin:auto"><h2>Create an account</h2>
-<form method="post">{% csrf_token %}{{ form.as_p }}<button>Sign up</button></form></article>{% endblock %}
+{% block content %}<div class="card" style="max-width:480px;margin:40px auto"><h1>Create an account</h1>
+<p class="muted">You start with six sample rooftop units, already analysed. No upload needed.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn">Sign up</button></form></div>{% endblock %}

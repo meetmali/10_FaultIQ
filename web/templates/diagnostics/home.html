@@ -1,13 +1,16 @@
-{% extends "base.html" %}{% block title %}Home{% endblock %}
+{% extends "base.html" %}{% load faultiq %}{% block title %}Home{% endblock %}
 {% block content %}
-<section>
-  <hgroup><h1>Find rooftop unit faults before tenants complain</h1>
-  <p>Upload a trend export from your building automation system. FaultIQ flags abnormal hours with an Isolation Forest, names the likely fault with physics rules, and an AI assistant ranks causes and checks from your symptoms.</p></hgroup>
-  <a href="{% url 'signup' %}" role="button">Get started</a> <a href="{% url 'fault_list' %}" role="button" class="secondary">Browse the fault library</a>
-</section>
-<div class="grid">
-  <article><h4>1. Upload</h4>A CSV of temperatures, damper and cooling commands.</article>
-  <article><h4>2. Detect</h4>Fault events with a name, duration and confidence.</article>
-  <article><h4>3. Diagnose</h4>Ask the AI assistant, review, confirm and export.</article>
+<div class="grid g-hero" style="align-items:center;margin:20px 0 28px">
+  <div>
+    <h1 style="font-size:2.2rem">Find rooftop unit faults before tenants complain.</h1>
+    <p class="muted" style="font-size:1.05rem">FaultIQ reads building automation trend data, flags abnormal hours with machine learning, names the likely fault with physics rules, and an AI assistant ranks causes and checks for the technician.</p>
+    <p><a class="btn" href="{% url 'signup' %}">Try it with sample data</a> <a class="btn ghost" href="{% url 'fault_list' %}">Browse the fault library</a></p>
+  </div>
+  <div class="card">{% rtu "fault" "low-refrigerant" "Animated rooftop unit with the refrigerant circuit highlighted as faulty" %}</div>
+</div>
+<div class="grid g3">
+  <div class="card"><h3>1 · Detect</h3><p class="muted">Isolation Forest scores every running hour; rules explain what is wrong.</p></div>
+  <div class="card"><h3>2 · Diagnose</h3><p class="muted">The AI assistant matches symptoms to the fault library and your confirmed cases.</p></div>
+  <div class="card"><h3>3 · Review</h3><p class="muted">Confirm or reject each fault; export the record or read it through the API.</p></div>
 </div>
 {% endblock %}

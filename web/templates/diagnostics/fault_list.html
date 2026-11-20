@@ -1,7 +1,7 @@
-{% extends "base.html" %}{% block title %}Fault library{% endblock %}
+{% extends "base.html" %}{% load faultiq %}{% block title %}Fault library{% endblock %}
 {% block content %}
-<h2>Fault library</h2>
-<form method="get" class="grid"><input type="search" name="q" value="{{ q }}" placeholder="Search symptoms or causes" aria-label="Search"><select name="component" aria-label="Component"><option value="">All components</option>{% for c in components %}<option {% if c == component %}selected{% endif %}>{{ c }}</option>{% endfor %}</select><button>Search</button></form>
-{% for f in faults %}<article><header><a href="{{ f.get_absolute_url }}"><b>{{ f.name }}</b></a> <span class="badge">{{ f.component }}</span></header>{{ f.symptoms|truncatewords:30 }}</article>
-{% empty %}<p>No faults match your search.</p>{% endfor %}
+<h1>Fault library</h1><p class="muted">The rooftop-unit faults FaultIQ detects, with symptoms, causes and what to check. Also the knowledge base for the AI assistant.</p>
+<form method="get" class="filters"><input type="search" name="q" value="{{ q }}" placeholder="Search symptoms or causes" aria-label="Search"><select name="component" aria-label="Component"><option value="">All components</option>{% for c in components %}<option {% if c == component %}selected{% endif %}>{{ c }}</option>{% endfor %}</select><button class="btn sm">Search</button></form>
+<div class="units">{% for f in faults %}<a class="unit-card" href="{{ f.get_absolute_url }}">{% rtu "fault" f.code f.name "card" %}<b>{{ f.name }}</b><div class="muted" style="font-size:.88rem">{{ f.symptoms|truncatewords:18 }}</div></a>
+{% empty %}<p class="empty">No faults match your search.</p>{% endfor %}</div>
 {% endblock %}

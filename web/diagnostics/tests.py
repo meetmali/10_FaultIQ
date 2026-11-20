@@ -11,7 +11,11 @@ from .models import FaultEvent, FaultType, Site, Unit
 SAMPLE = Path(settings.BASE_DIR) / "sample_data" / "rtu_faulty.csv"
 
 
-@override_settings(AI_EMBEDDINGS="tfidf", MEDIA_ROOT=Path(settings.BASE_DIR) / "media" / "test")
+@override_settings(
+    AI_EMBEDDINGS="tfidf",
+    MEDIA_ROOT=Path(settings.BASE_DIR) / "media" / "test",
+    STORAGES={**settings.STORAGES, "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}},
+)
 class WorkflowTests(TestCase):
     def setUp(self):
         User = get_user_model()
@@ -68,3 +72,10 @@ class WorkflowTests(TestCase):
                            ("fault_detail", ["mat-sensor"])]:
             self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 200, name)
         self.assertIn("events", self.client.get(reverse("api_unit_events", args=[self.unit.pk])).json())
+
+    def test_signup_loads_sample_portfolio(self):
+        self.client.logout()
+        r = self.client.post(reverse("signup"), {"username": "newbie", "password1": "Strong-pass-9081", "password2": "Strong-pass-9081"}, follow=True)
+        self.assertContains(r, "units have a fault")
+        self.assertEqual(Unit.objects.filter(site__owner__username="newbie").count(), 6)
+        self.assertTrue(FaultEvent.objects.filter(analysis__unit__site__owner__username="newbie", review_status="confirmed").exists())

@@ -1,17 +1,25 @@
 {% extends "base.html" %}{% block title %}Analysis{% endblock %}
 {% block content %}
-<hgroup><h2>Analysis of {{ analysis.original_name }}</h2><p><a href="{{ analysis.unit.get_absolute_url }}">{{ analysis.unit }}</a> · {{ analysis.created_at|date:"Y-m-d H:i" }} · {{ analysis.duration_ms }} ms</p></hgroup>
+<p><a href="{{ analysis.unit.get_absolute_url }}">← {{ analysis.unit.name }}</a></p>
+<h1>Analysis of {{ analysis.original_name }}</h1>
+<p class="muted">{{ analysis.unit }} · {{ analysis.created_at|date:"M j, Y H:i" }} · computed in {{ analysis.duration_ms }} ms</p>
 {% if analysis.status == "failed" %}<div class="msg error">{{ analysis.error }}</div>{% else %}
-<div class="stats"><article><b>{{ analysis.hours_analysed }}</b>Running hours</article><article><b>{{ analysis.anomaly_hours }}</b>Anomalous hours</article><article><b>{{ events|length }}</b>Fault events</article><article><b>{{ analysis.rows_dropped }}</b>Rows dropped</article></div>
-<article><header>Supply air vs setpoint, with anomaly score</header><canvas id="ts" height="110" aria-label="Line chart of supply air temperature, setpoint and anomaly score"></canvas></article>
-<article><header>Fault events</header><table><thead><tr><th>Fault</th><th>Start</th><th>Hours</th><th>Confidence</th><th>Review</th></tr></thead><tbody>
-{% for e in events %}<tr><td><a href="{{ e.get_absolute_url }}">{{ e.label }}</a></td><td>{{ e.starts_at|date:"Y-m-d H:i" }}</td><td>{{ e.hours }}</td><td>{{ e.confidence|floatformat:2 }}</td><td><span class="badge {{ e.review_status }}">{{ e.get_review_status_display }}</span></td></tr>
-{% empty %}<tr><td colspan="5">No fault events. The unit looks healthy for this period.</td></tr>{% endfor %}</tbody></table></article>
+<div class="stats"><div class="stat"><b>{{ analysis.hours_analysed }}</b><span>Running hours</span></div><div class="stat"><b>{{ analysis.anomaly_hours }}</b><span>Anomalous hours</span></div><div class="stat"><b>{{ events|length }}</b><span>Fault events</span></div><div class="stat"><b>{{ analysis.rows_dropped }}</b><span>Rows dropped</span></div></div>
+<div class="card"><h2>Supply air vs setpoint, with the anomaly score</h2><div style="height:300px"><canvas id="ts" aria-label="Line chart of supply air temperature, setpoint, outdoor air and anomaly score"></canvas></div>
+<small>Anomaly score above 0 means the Isolation Forest found the hour unusual.</small></div>
+<div class="card"><h2>Fault events</h2><div class="table-wrap"><table><thead><tr><th>Fault</th><th>Start</th><th>Hours</th><th>Confidence</th><th>Review</th></tr></thead><tbody>
+{% for e in events %}<tr><td><a href="{{ e.get_absolute_url }}">{{ e.label }}</a></td><td>{{ e.starts_at|date:"M j, H:i" }}</td><td>{{ e.hours }}</td><td>{{ e.confidence|floatformat:2 }}</td><td><span class="badge r-{{ e.review_status }}">{{ e.get_review_status_display }}</span></td></tr>
+{% empty %}<tr><td colspan="5" class="empty">No fault events. The unit looks healthy for this period.</td></tr>{% endfor %}</tbody></table></div></div>
 {% endif %}
 {% endblock %}
 {% block scripts %}{% if analysis.status == "done" %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script>const s={{ series|safe }};new Chart(document.getElementById('ts'),{type:'line',data:{labels:s.t.map(t=>t.slice(5,13).replace('T',' ')),datasets:[
-{label:'Supply air °C',data:s.sat,borderColor:'#0284c7',pointRadius:0,yAxisID:'y'},{label:'Setpoint °C',data:s.sat_sp,borderColor:'#64748b',pointRadius:0,borderDash:[4,4],yAxisID:'y'},
-{label:'Anomaly score',data:s.score,borderColor:'#dc2626',pointRadius:0,yAxisID:'y1'}]},options:{scales:{y1:{position:'right',grid:{drawOnChartArea:false}}}}});</script>
+<script>const s={{ series|safe }};let c;function draw(){c&&c.destroy();Chart.defaults.color=fqVar("--muted");Chart.defaults.borderColor=fqVar("--line");
+c=new Chart(document.getElementById("ts"),{type:"line",data:{labels:s.t.map(t=>t.slice(5,13).replace("T"," ")),datasets:[
+{label:"Supply air °C",data:s.sat,borderColor:fqVar("--air-cool"),pointRadius:0,borderWidth:1.5,yAxisID:"y"},
+{label:"Setpoint °C",data:s.sat_sp,borderColor:fqVar("--muted"),pointRadius:0,borderDash:[4,4],borderWidth:1,yAxisID:"y"},
+{label:"Outdoor air °C",data:s.oat,borderColor:fqVar("--air-warm"),pointRadius:0,borderWidth:1,yAxisID:"y"},
+{label:"Anomaly score",data:s.score,borderColor:fqVar("--fault-glow"),backgroundColor:fqVar("--fault-line"),fill:"origin",pointRadius:0,borderWidth:1,yAxisID:"y1"}]},
+options:{maintainAspectRatio:false,interaction:{mode:"index",intersect:false},scales:{x:{ticks:{maxTicksLimit:12}},y:{title:{display:true,text:"°C"}},y1:{position:"right",grid:{drawOnChartArea:false},title:{display:true,text:"score"}}}}})}
+draw();addEventListener("fq-theme",draw);</script>
 {% endif %}{% endblock %}

@@ -35,10 +35,12 @@ Repository: https://github.com/meetmali/10_FaultIQ. App code: `web/`. AI details
 
 ### 1.3 User experience
 
-End-to-end workflow: sign up → add a site → add a unit → upload CSV → see analysis (chart, events) → open an
-event → ask the assistant → confirm with notes → dashboard and CSV export update. Navigation bar on every page
-(template inheritance from `base.html`), consistent Pico CSS styling, success/error messages after every
-action, inline form errors, empty states that tell the user what to do next.
+End-to-end workflow: sign up → a sample portfolio of 6 units is created and analysed automatically → Overview
+(health ring, units needing attention, fault hours chart, fleet table) → unit page (animated rooftop unit with
+the faulty part highlighted) → fault event → ask the AI assistant → confirm with notes → Overview and CSV export
+update. Users can also add their own sites and units and upload their own trend export. Navigation bar on every
+page (template inheritance from `base.html`), one stylesheet with the design tokens of the earlier FaultIQ React
+UI, light and dark themes, success/error messages after every action, inline form errors and empty states.
 
 ### 1.4 Differentiation
 
@@ -109,7 +111,7 @@ Assistant accuracy on 10 labelled descriptions (warm model):
 | bge embeddings | 8/10 | 10/10 | 60 ms |
 | Hybrid (default) | 9/10 | 10/10 | 59 ms |
 
-Django test suite: 9 tests pass (`python manage.py test diagnostics`).
+Django test suite: 10 tests pass (`python manage.py test diagnostics`).
 
 ### 4.3 Failure analysis
 
@@ -216,7 +218,7 @@ this report, `requirements.txt` files, `.gitignore` (env files, database, upload
 
 | Task | Current status | Responsible member | Expected completion |
 |---|---|---|---|
-| Django core features | Done for the draft: models, auth, CRUD, forms, templates, dashboard | Meet Kailash Mali | Polish by Dec 1 |
+| Django core features | Done for the draft: models, auth, CRUD, forms, templates, dashboard, preloaded sample portfolio | Meet Kailash Mali | Polish by Dec 1 |
 | Database and APIs | Done: migrations, seeded library, 3 JSON endpoints, CSV export | Meet Kailash Mali | Nov 28 (PostgreSQL on Render) |
 | AI integration | Working: detection and hybrid assistant in the app | Meet Kailash Mali | Dec 3 (cached embeddings, richer library phrasing) |
 | Evaluation and testing | 5 tests, 2 labelled benchmarks, 9 unit tests, 1 improvement | Meet Kailash Mali | Dec 5 (larger labelled set, more failure cases) |
