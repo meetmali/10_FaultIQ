@@ -2,6 +2,8 @@
 
 INFO 490 Project 2. Individual project by Meet Kailash Mali.
 
+**Live app:** https://faultiq-web.onrender.com (sign up for an account; it comes with six analysed sample units. The free host sleeps when idle, so the first load can take up to a minute.)
+
 **Problem.** Rooftop units (RTUs) cool most small and mid-size commercial buildings. Faults such as a stuck
 economizer damper, low refrigerant or a drifting sensor waste energy for weeks before anyone notices, because
 small facility teams do not have time to read building automation system (BAS) trend logs and enterprise
@@ -71,7 +73,7 @@ python manage.py make_sample         # regenerate the synthetic sample CSVs
 
 ## Deploy
 
-[render.yaml](render.yaml) deploys the app and a PostgreSQL database on Render (Blueprint). Steps and the
+Live at https://faultiq-web.onrender.com. [render.yaml](render.yaml) deploys the app and a PostgreSQL database on Render (Blueprint). Steps and the
 cost comparison are in [docs/P2_REPORT.md](docs/P2_REPORT.md#part-5-deployment-cost-and-production-readiness).
 
 ## Data
