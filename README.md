@@ -18,6 +18,15 @@ using the fault library and the team's confirmed past cases.
 - The Django app lives in [web/](web/). The rest of the repository is the larger FaultIQ platform
   (.NET API, Python research pipeline, React UI), described in [docs/platform-README.md](docs/platform-README.md).
 
+## Architecture
+
+![FaultIQ Django app architecture: browser pages, Render edge, Django app, PostgreSQL and media store, and the in-process AI modules](docs/architecture.svg)
+
+One Django process does everything; there is no separate AI server. Requests flow down from the browser through
+Render to Django. Django keeps all state in the database (PostgreSQL on Render, SQLite locally) and calls the AI
+modules in-process through `services.py`. Detection writes analyses and fault events; the assistant reads the
+fault library and the user's confirmed cases. The AI is open source, runs on the CPU and calls no external API.
+
 ## Main features
 
 1. **Trend upload and fault detection.** CSV upload with validation, Isolation Forest anomaly scoring plus
