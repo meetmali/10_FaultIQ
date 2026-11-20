@@ -7,7 +7,7 @@
   {% if event %}<p>Context: <a href="{{ event.get_absolute_url }}">{{ event.label }} on {{ event.analysis.unit }}</a></p>{% endif %}
   <form method="post" id="ask">{% csrf_token %}{% if event %}<input type="hidden" name="event" value="{{ event.pk }}">{% endif %}{{ form.as_p }}<button class="btn">Rank likely causes</button></form>
   <p style="margin-top:14px"><small>Try an example:</small></p>
-  {% for x in examples %}<button type="button" class="btn ghost sm example" style="margin:0 6px 6px 0;text-align:left">{{ x }}</button>{% endfor %}
+  {% for x in examples %}<button type="button" class="btn ghost sm example" style="margin:0 6px 6px 0;text-align:left;white-space:normal">{{ x }}</button>{% endfor %}
   {% if history %}<h3 style="margin-top:16px">Recent questions</h3><ul>{% for q in history %}<li><small>{{ q.text|truncatechars:80 }} → {{ q.results.matches.0.name }}</small></li>{% endfor %}</ul>{% endif %}
 </div>
 <div class="card">

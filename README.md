@@ -15,6 +15,7 @@ using the fault library and the team's confirmed past cases.
 
 - Startup scope, features, evaluation, deployment and cost analysis: [docs/P2_REPORT.md](docs/P2_REPORT.md)
 - AI documentation: [README_AI.md](README_AI.md)
+- 4-minute presentation and demo script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
 - The Django app lives in [web/](web/). The rest of the repository is the larger FaultIQ platform
   (.NET API, Python research pipeline, React UI), described in [docs/platform-README.md](docs/platform-README.md).
 
