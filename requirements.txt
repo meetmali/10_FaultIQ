@@ -1,0 +1,2 @@
+# Course project (Django web app). Full install, including the embedding model:
+-r web/requirements-ai.txt

@@ -67,3 +67,12 @@ frontend/playwright-report/
 
 # --- Logs ---
 *.log
+
+# --- Django web app (course project) ---
+web/db.sqlite3
+web/media/
+web/staticfiles/
+*.sqlite3
+*.bin
+*.safetensors
+*.pt

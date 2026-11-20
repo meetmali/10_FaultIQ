@@ -1,0 +1,5 @@
+# Optional: the BAAI/bge-small-en-v1.5 embedding model (about 130 MB) and its runtime.
+# Without it the assistant runs in TF-IDF mode (set AI_EMBEDDINGS=tfidf).
+-r requirements.txt
+sentence-transformers==6.3.0
+torch==2.15.0

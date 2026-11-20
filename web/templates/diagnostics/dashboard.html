@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2>Portfolio overview</h2>
+<div class="stats">
+  <article><b>{{ stats.units }}</b>Units</article><article><b>{{ stats.analyses }}</b>Analyses</article>
+  <article><b>{{ stats.events }}</b>Fault events</article><article><b>{{ stats.unreviewed }}</b>Waiting for review</article>
+  <article><b>{{ stats.confirmed }}</b>Confirmed</article>
+</div>
+<div class="grid">
+  <article><header>Fault hours by type</header>
+    {% if by_fault %}<canvas id="faultChart" height="220" aria-label="Bar chart of fault hours by fault type"></canvas>
+    <table><tbody>{% for r in by_fault %}<tr><td>{{ r.fault_type__name|default:"Unclassified anomaly" }}</td><td>{{ r.n }} events</td><td>{{ r.hours }} h</td></tr>{% endfor %}</tbody></table>
+    {% else %}<p>No fault events yet. Upload a trend export on a unit page.</p>{% endif %}
+  </article>
+  <article><header>Biggest unreviewed faults</header>
+    {% for e in recent %}<p><a href="{{ e.get_absolute_url }}">{{ e.label }}</a><br><small>{{ e.analysis.unit }} · {{ e.hours }} h · confidence {{ e.confidence|floatformat:2 }}</small></p>
+    {% empty %}<p>Nothing waiting.</p>{% endfor %}
+  </article>
+</div>
+<article><header>Units <a href="{% url 'unit_create' %}" style="float:right">+ Add unit</a> <a href="{% url 'site_create' %}" style="float:right;margin-right:1rem">+ Add site</a></header>
+  <table><thead><tr><th>Site</th><th>Unit</th><th>Tons</th><th>Fault events</th></tr></thead><tbody>
+  {% for u in units %}<tr><td>{{ u.site.name }}</td><td><a href="{{ u.get_absolute_url }}">{{ u.name }}</a></td><td>{{ u.tonnage|default:"-" }}</td><td>{{ u.n_events }}</td></tr>
+  {% empty %}<tr><td colspan="4">No units yet. <a href="{% url 'site_create' %}">Add a site</a> to start.</td></tr>{% endfor %}
+  </tbody></table>
+  <a href="{% url 'events_csv' %}">Export all events (CSV)</a> · <a href="{% url 'api_summary' %}">Summary (JSON API)</a>
+</article>
+{% endblock %}
+{% block scripts %}{% if by_fault %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>const d={{ chart|safe }};new Chart(document.getElementById('faultChart'),{type:'bar',data:{labels:d.labels,datasets:[{label:'Hours',data:d.hours,backgroundColor:'#0284c7'}]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});</script>
+{% endif %}{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block title %}{{ unit.name }}{% endblock %}
+{% block content %}
+<hgroup><h2>{{ unit.name }}</h2><p>{{ unit.site.name }}{% if unit.site.city %}, {{ unit.site.city }}{% endif %}{% if unit.tonnage %} · {{ unit.tonnage }} tons{% endif %}</p></hgroup>
+<p><a href="{% url 'unit_update' unit.pk %}">Edit</a> · <a href="{% url 'unit_delete' unit.pk %}">Delete</a> · <a href="{% url 'api_unit_events' unit.pk %}">Events (JSON API)</a></p>
+<article><header>Analyse a trend export</header>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.as_p }}
+  <small>Columns: timestamp, oat, rat, mat, sat, sat_sp, damper_pct, cooling_pct, fan_on. Temperatures in °C. A sample file is in <code>web/sample_data/</code>.</small><br><br>
+  <button>Upload and analyse</button></form>
+</article>
+<article><header>Analyses</header>
+<table><thead><tr><th>Uploaded</th><th>File</th><th>Status</th><th>Hours</th><th>Events</th></tr></thead><tbody>
+{% for a in analyses %}<tr><td><a href="{{ a.get_absolute_url }}">{{ a.created_at|date:"Y-m-d H:i" }}</a></td><td>{{ a.original_name }}</td><td>{{ a.get_status_display }}</td><td>{{ a.hours_analysed }}</td><td>{{ a.n }}</td></tr>
+{% empty %}<tr><td colspan="5">No analyses yet.</td></tr>{% endfor %}</tbody></table></article>
+{% endblock %}

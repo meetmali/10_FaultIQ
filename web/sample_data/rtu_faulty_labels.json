@@ -1,0 +1,22 @@
+[
+  {
+    "fault": "econ-stuck-open",
+    "start": "2026-06-06",
+    "end": "2026-06-07"
+  },
+  {
+    "fault": "low-refrigerant",
+    "start": "2026-06-10",
+    "end": "2026-06-11"
+  },
+  {
+    "fault": "mat-sensor",
+    "start": "2026-06-14",
+    "end": "2026-06-15"
+  },
+  {
+    "fault": "econ-stuck-closed",
+    "start": "2026-06-18",
+    "end": "2026-06-19"
+  }
+]

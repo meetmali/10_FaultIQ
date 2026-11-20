@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Home{% endblock %}
+{% block content %}
+<section>
+  <hgroup><h1>Find rooftop unit faults before tenants complain</h1>
+  <p>Upload a trend export from your building automation system. FaultIQ flags abnormal hours with an Isolation Forest, names the likely fault with physics rules, and an AI assistant ranks causes and checks from your symptoms.</p></hgroup>
+  <a href="{% url 'signup' %}" role="button">Get started</a> <a href="{% url 'fault_list' %}" role="button" class="secondary">Browse the fault library</a>
+</section>
+<div class="grid">
+  <article><h4>1. Upload</h4>A CSV of temperatures, damper and cooling commands.</article>
+  <article><h4>2. Detect</h4>Fault events with a name, duration and confidence.</article>
+  <article><h4>3. Diagnose</h4>Ask the AI assistant, review, confirm and export.</article>
+</div>
+{% endblock %}

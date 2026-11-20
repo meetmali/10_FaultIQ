@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block title %}Analysis{% endblock %}
+{% block content %}
+<hgroup><h2>Analysis of {{ analysis.original_name }}</h2><p><a href="{{ analysis.unit.get_absolute_url }}">{{ analysis.unit }}</a> · {{ analysis.created_at|date:"Y-m-d H:i" }} · {{ analysis.duration_ms }} ms</p></hgroup>
+{% if analysis.status == "failed" %}<div class="msg error">{{ analysis.error }}</div>{% else %}
+<div class="stats"><article><b>{{ analysis.hours_analysed }}</b>Running hours</article><article><b>{{ analysis.anomaly_hours }}</b>Anomalous hours</article><article><b>{{ events|length }}</b>Fault events</article><article><b>{{ analysis.rows_dropped }}</b>Rows dropped</article></div>
+<article><header>Supply air vs setpoint, with anomaly score</header><canvas id="ts" height="110" aria-label="Line chart of supply air temperature, setpoint and anomaly score"></canvas></article>
+<article><header>Fault events</header><table><thead><tr><th>Fault</th><th>Start</th><th>Hours</th><th>Confidence</th><th>Review</th></tr></thead><tbody>
+{% for e in events %}<tr><td><a href="{{ e.get_absolute_url }}">{{ e.label }}</a></td><td>{{ e.starts_at|date:"Y-m-d H:i" }}</td><td>{{ e.hours }}</td><td>{{ e.confidence|floatformat:2 }}</td><td><span class="badge {{ e.review_status }}">{{ e.get_review_status_display }}</span></td></tr>
+{% empty %}<tr><td colspan="5">No fault events. The unit looks healthy for this period.</td></tr>{% endfor %}</tbody></table></article>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if analysis.status == "done" %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>const s={{ series|safe }};new Chart(document.getElementById('ts'),{type:'line',data:{labels:s.t.map(t=>t.slice(5,13).replace('T',' ')),datasets:[
+{label:'Supply air °C',data:s.sat,borderColor:'#0284c7',pointRadius:0,yAxisID:'y'},{label:'Setpoint °C',data:s.sat_sp,borderColor:'#64748b',pointRadius:0,borderDash:[4,4],yAxisID:'y'},
+{label:'Anomaly score',data:s.score,borderColor:'#dc2626',pointRadius:0,yAxisID:'y1'}]},options:{scales:{y1:{position:'right',grid:{drawOnChartArea:false}}}}});</script>
+{% endif %}{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block title %}AI assistant{% endblock %}
+{% block content %}
+<hgroup><h2>AI diagnostic assistant</h2><p>Describe the symptoms. The assistant ranks fault library entries and your confirmed past cases by meaning, not keywords.</p></hgroup>
+{% if event %}<p>Context: <a href="{{ event.get_absolute_url }}">{{ event.label }} on {{ event.analysis.unit }}</a></p>{% endif %}
+<form method="post">{% csrf_token %}{% if event %}<input type="hidden" name="event" value="{{ event.pk }}">{% endif %}{{ form.as_p }}<button>Rank likely causes</button></form>
+{% if result %}
+<article><header>Results <small>({{ result.backend }}, {{ result.latency_ms }} ms)</small></header>
+{% if not result.results.confident %}<div class="msg">No confident match. The description may be outside the rooftop-unit faults FaultIQ knows. Treat these as weak suggestions and check the basics: power, schedule, setpoints.</div>{% endif %}
+<ol>{% for m in result.results.matches %}<li><a href="{% url 'fault_detail' m.code %}"><b>{{ m.name }}</b></a> <small>similarity {{ m.score }}</small><br>{{ m.checks }}</li>{% endfor %}</ol>
+{% if result.results.similar_cases %}<h5>Similar confirmed cases</h5><ul>{% for c in result.results.similar_cases %}<li><a href="{% url 'event_detail' c.id %}">{{ c.label }}</a> <small>{{ c.score }}</small></li>{% endfor %}</ul>{% endif %}
+<small>AI suggestions support, not replace, a technician's judgement.</small>
+</article>{% endif %}
+{% if history %}<h5>Recent questions</h5><ul>{% for q in history %}<li>{{ q.text|truncatechars:90 }}: {{ q.results.matches.0.name }}</li>{% endfor %}</ul>{% endif %}
+{% endblock %}

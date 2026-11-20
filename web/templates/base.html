@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}FaultIQ{% endblock %} | FaultIQ</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
+  <style>
+    .badge{display:inline-block;padding:.1rem .5rem;border-radius:1rem;font-size:.8rem;background:var(--pico-muted-border-color)}
+    .badge.confirmed{background:#bbf7d0;color:#14532d}.badge.rejected{background:#fecaca;color:#7f1d1d}.badge.unreviewed{background:#fde68a;color:#78350f}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
+    .stats article{margin:0;text-align:center}.stats b{display:block;font-size:2rem}
+    .msg{padding:.75rem 1rem;border-radius:.5rem;margin-bottom:1rem;background:#e0f2fe;color:#0c4a6e}.msg.error{background:#fee2e2;color:#7f1d1d}.msg.success{background:#dcfce7;color:#14532d}
+    nav .brand{font-weight:700}
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+<header class="container">
+  <nav>
+    <ul><li><a href="{% url 'home' %}" class="brand">FaultIQ</a></li></ul>
+    <ul>
+      {% if user.is_authenticated %}
+        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'event_list' %}">Fault events</a></li>
+        <li><a href="{% url 'assistant' %}">AI assistant</a></li>
+      {% endif %}
+      <li><a href="{% url 'fault_list' %}">Fault library</a></li>
+      {% if user.is_authenticated %}
+        <li><form method="post" action="{% url 'logout' %}" style="margin:0">{% csrf_token %}<button class="secondary outline" style="padding:.3rem .8rem">Log out ({{ user.username }})</button></form></li>
+      {% else %}
+        <li><a href="{% url 'login' %}">Log in</a></li><li><a href="{% url 'signup' %}" role="button">Sign up</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+</header>
+<main class="container">
+  {% for m in messages %}<div class="msg {{ m.tags }}" role="status">{{ m }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+<footer class="container"><small>FaultIQ: fault detection and diagnostics for rooftop HVAC units. MIT licensed.</small></footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

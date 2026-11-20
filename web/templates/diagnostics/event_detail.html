@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}{{ event.label }}{% endblock %}
+{% block content %}
+<hgroup><h2>{{ event.label }}</h2><p>{{ event.analysis.unit }} · {{ event.starts_at|date:"Y-m-d H:i" }} to {{ event.ends_at|date:"Y-m-d H:i" }} · {{ event.hours }} h · confidence {{ event.confidence|floatformat:2 }}</p></hgroup>
+<div class="grid">
+<article><header>What it means</header>
+{% if event.fault_type %}<p>{{ event.fault_type.symptoms }}</p><p><b>Check first:</b> {{ event.fault_type.checks }}</p><a href="{{ event.fault_type.get_absolute_url }}">Library entry</a>
+{% else %}<p>The anomaly detector found unusual behaviour that no physics rule explains. Use the AI assistant below with what you see on site.</p>{% endif %}
+</article>
+<article><header>Technician review</header><form method="post">{% csrf_token %}{{ form.as_p }}<button>Save review</button></form></article>
+</div>
+<article><header>Ask the AI assistant about this event</header>
+<form method="post" action="{% url 'assistant' %}">{% csrf_token %}<input type="hidden" name="event" value="{{ event.pk }}">{{ assistant_form.as_p }}<button>Rank likely causes</button></form>
+{% for q in history %}<details><summary>{{ q.created_at|date:"Y-m-d H:i" }}: {{ q.text|truncatechars:80 }}</summary><ol>{% for m in q.results.matches %}<li>{{ m.name }} ({{ m.score }})</li>{% endfor %}</ol></details>{% endfor %}
+</article>
+{% endblock %}
