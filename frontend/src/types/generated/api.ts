@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/equipment-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListEquipmentTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/equipment": {
         parameters: {
             query?: never;
@@ -228,6 +244,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/fault-events/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DailyFaultHours"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/fault-events/{id}": {
         parameters: {
             query?: never;
@@ -346,6 +378,15 @@ export interface components {
             name: string;
             site: null | string;
         };
+        DailyFaultHours: {
+            /** Format: date */
+            date: string;
+            kind: string;
+            /** Format: int32 */
+            hours: number;
+            /** Format: int32 */
+            units: number;
+        };
         EquipmentOverview: {
             /** Format: uuid */
             id: string;
@@ -374,6 +415,12 @@ export interface components {
             site: null | string;
             /** Format: date-time */
             created_at: string;
+        };
+        EquipmentTypeResponse: {
+            id: string;
+            name: string;
+            status: string;
+            description: string;
         };
         FaultEventResponse: {
             /** Format: uuid */
@@ -453,6 +500,10 @@ export interface components {
             dataset: string;
             dataset_label: string;
             intensity_unit: string;
+            plain_name: string;
+            component: string;
+            plain_summary: null | components["schemas"]["CitedText"];
+            what_to_do: null | components["schemas"]["CitedText"];
             definition: null | components["schemas"]["CitedText"];
             observed: null | components["schemas"]["CitedText"];
             causes: components["schemas"]["CitedText"][];
@@ -617,6 +668,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReadinessResponse"];
+                };
+            };
+        };
+    };
+    ListEquipmentTypes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentTypeResponse"][];
                 };
             };
         };
@@ -946,6 +1017,7 @@ export interface operations {
                 review_status?: string;
                 from?: string;
                 to?: string;
+                order?: string;
                 page?: number;
                 page_size?: number;
             };
@@ -987,6 +1059,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FaultEventSummaryResponse"];
+                };
+            };
+        };
+    };
+    DailyFaultHours: {
+        parameters: {
+            query?: {
+                equipment_id?: string;
+                site?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DailyFaultHours"][];
                 };
             };
         };

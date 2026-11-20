@@ -2,11 +2,11 @@ import { BookOpen, ChevronRight } from "lucide-react";
 import { useId, useMemo, useState, type FormEvent } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 
-import { KindBadge, ReviewBadge } from "../components/Badges";
-import { ChartFigure, type ChartOption } from "../components/charts";
-import { axisName, KIND_SHADE, LINE_COLORS } from "../components/charts/theme";
-import { Empty, ErrorState, Freshness, Loading, QueryView } from "../components/QueryState";
-import { Badge, Button, Card, CardTitle, Field, inputClass, Stat } from "../components/ui";
+import { KindBadge, ReviewBadge } from "../../components/Badges";
+import { ChartFigure, type ChartOption } from "../../components/charts";
+import { axisName, KIND_SHADE, LINE_COLORS } from "../../components/charts/theme";
+import { Empty, ErrorState, Freshness, Loading, QueryView } from "../../components/QueryState";
+import { Badge, Button, Card, CardTitle, Field, inputClass, Stat, tableClass } from "../../components/ui";
 import {
   useAnalyses,
   useAnalysis,
@@ -14,13 +14,15 @@ import {
   useFaultEvents,
   useFaultTitles,
   useHealth,
+  useLibraryIndex,
   useResult,
   useReview,
   useSeries,
-} from "../hooks/queries";
-import { formatConfidence, formatDataTime, formatDateTime, formatNumber } from "../lib/format";
-import { faultTitle, KIND_LABEL, REVIEW_LABEL } from "../lib/labels";
-import type { AnalysisResponse, ChartSeries, DiagnosticResult, FaultEvent, FaultEventResponse, Statement } from "../types/api";
+} from "../../hooks/queries";
+import { formatConfidence, formatDataTime, formatDateTime, formatNumber } from "../../lib/format";
+import { faultTitle, KIND_LABEL, REVIEW_LABEL } from "../../lib/labels";
+import type { AnalysisResponse, ChartSeries, DiagnosticResult, FaultEvent, FaultEventResponse, Statement } from "../../types/api";
+import { CaseHistory, ContextTimeline, EvidenceWeights, ResidualExplorer, SchematicScrubber, SignatureCheck } from "./panels";
 
 const STATEMENT_LABEL: Record<string, string> = {
   finding: "Model inference",
@@ -30,7 +32,7 @@ const STATEMENT_LABEL: Record<string, string> = {
   recommended: "Suggested check",
 };
 
-export default function DiagnosticsPage() {
+export default function TechnicianWorkbench() {
   const { equipmentId = "" } = useParams();
   const [params, setParams] = useSearchParams();
   const equipment = useEquipment(equipmentId);
@@ -54,16 +56,16 @@ export default function DiagnosticsPage() {
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-slate-600">
-        <Link to="/" className="text-sky-800 hover:underline">Dashboard</Link>
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-muted">
+        <Link to="/units" className="text-accent hover:underline">Units</Link>
         <ChevronRight aria-hidden="true" className="size-4" />
         <span aria-current="page">{equipment.data?.name ?? "Equipment"}</span>
       </nav>
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Fault diagnostics: {equipment.data?.name ?? "…"}</h1>
-          <p className="text-sm text-slate-600">{equipment.data?.site ?? "No site recorded"}</p>
+          <h1 className="text-2xl font-semibold text-ink">Diagnostic workbench: {equipment.data?.name ?? "…"}</h1>
+          <p className="text-sm text-muted">{equipment.data?.site ?? "No site recorded"}</p>
         </div>
         {(analyses.data?.items.length ?? 0) > 0 && (
           <Field label="Analysis" htmlFor={`${id}-analysis`}>
@@ -86,7 +88,7 @@ export default function DiagnosticsPage() {
       {analyses.isPending ? (
         <Loading label="Loading analyses…" />
       ) : !analysisId ? (
-        <Empty>This unit has no analyses yet. Upload data from the dashboard to analyse it.</Empty>
+        <Empty>This unit has no analyses yet. Upload data from the home page to analyse it.</Empty>
       ) : (
         <QueryView query={analysis} loadingLabel="Loading analysis…">
           {(a) =>
@@ -117,15 +119,15 @@ function AnalysisStatus({ analysis }: { analysis: AnalysisResponse }) {
     return (
       <Card>
         <CardTitle>Analysis failed</CardTitle>
-        <p role="alert" className="text-sm text-red-800">{analysis.error_message ?? "The analysis failed."}</p>
-        <p className="mt-1 text-xs text-slate-500">Error code: {analysis.error_code}</p>
+        <p role="alert" className="text-sm text-fault">{analysis.error_message ?? "The analysis failed."}</p>
+        <p className="mt-1 text-xs text-muted">Error code: {analysis.error_code}</p>
       </Card>
     );
   }
   return (
     <Card>
       <Loading label={analysis.status === "queued" ? "Waiting for the worker to pick up this analysis…" : "Analysing… this page updates by itself."} />
-      <p className="text-xs text-slate-500">A 100-day file usually takes under 10 seconds once started.</p>
+      <p className="text-xs text-muted">A 100-day file usually takes under 10 seconds once started.</p>
     </Card>
   );
 }
@@ -150,6 +152,7 @@ function Results({
   onSelect: (key: string) => void;
 }) {
   const titles = useFaultTitles();
+  const library = useLibraryIndex();
   const demo = useHealth().data?.demo_mode ?? false;
   const title = (f?: string | null) => (f ? (titles[f] ?? faultTitle(f)) : "No fault named");
   const selected = result.events.find((e) => e.id === (eventKey ?? defaultEvent(result)));
@@ -164,11 +167,35 @@ function Results({
         <Stat label="Fault events" value={formatNumber(result.events.length)} sample={demo} />
         <Stat label="Points used" value={result.point_set === "basic" ? "Basic" : "All"} />
       </dl>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted">
         Event times are shown as recorded in the uploaded data. Model {analysis.model_version} · pipeline {analysis.pipeline_version} · result schema {result.schema_version}
       </p>
 
+      {series?.hourly ? (
+        <div className="grid gap-6 xl:grid-cols-5">
+          <div className="xl:col-span-3">
+            <SchematicScrubber key={selected?.id} hourly={series.hourly} result={result} selected={selected} library={library} />
+          </div>
+          <div className="xl:col-span-2">
+            {selected && <SignatureCheck event={selected} hourly={series.hourly} library={library} />}
+          </div>
+        </div>
+      ) : (
+        series && (
+          <p className="rounded-lg border border-warn-line bg-warn-soft px-3 py-2 text-xs text-warn">
+            This analysis was stored before the live schematic existed (chart series v{series.version}). Re-run it to see sensor
+            readings on the unit schematic, the signature check and the context timeline.
+          </p>
+        )
+      )}
+
       {series && <OverviewChart series={series} result={result} selected={selected} />}
+      {series?.hourly && (
+        <div className="grid gap-6 xl:grid-cols-2">
+          <ContextTimeline hourly={series.hourly} />
+          <ResidualExplorer hourly={series.hourly} />
+        </div>
+      )}
 
       <Card aria-labelledby="events-heading">
         <CardTitle id="events-heading" aside={<Freshness query={rows} />}>Fault events</CardTitle>
@@ -176,9 +203,9 @@ function Results({
           <Empty>No alarms in this analysis: the detector found nothing abnormal.</Empty>
         ) : (
           <div className="max-h-80 overflow-auto">
-            <table className="w-full text-left text-sm [&_td]:px-2 [&_th]:px-2">
+            <table className={tableClass}>
               <caption className="sr-only">Fault events in this analysis; choose one to see its evidence</caption>
-              <thead className="sticky top-0 bg-white text-xs text-slate-500">
+              <thead className="sticky top-0 bg-surface text-xs text-muted">
                 <tr>
                   <th scope="col" className="py-2 font-medium">Event</th>
                   <th scope="col" className="font-medium">Result</th>
@@ -190,11 +217,11 @@ function Results({
               </thead>
               <tbody>
                 {result.events.map((e) => (
-                  <tr key={e.id} className={e.id === selected?.id ? "bg-sky-50" : "border-t border-slate-100"}>
+                  <tr key={e.id} className={e.id === selected?.id ? "bg-accent-soft" : "border-t border-line"}>
                     <td className="py-2 whitespace-nowrap">
                       <button
                         type="button"
-                        className="text-left text-sky-800 underline-offset-2 hover:underline"
+                        className="text-left text-accent underline-offset-2 hover:underline"
                         aria-current={e.id === selected?.id ? "true" : undefined}
                         onClick={() => onSelect(e.id)}
                       >
@@ -224,6 +251,8 @@ function Results({
           analysisId={analysis.id}
           demo={demo}
           title={title}
+          rows={byKey}
+          onSelect={onSelect}
         />
       )}
     </div>
@@ -342,8 +371,8 @@ function EvidenceChart({ signal, start, end }: { signal: ChartSeries["events"][s
 function StatementBlock({ s }: { s: Statement }) {
   return (
     <div className="space-y-1">
-      <Badge className="border-slate-300 bg-slate-50 text-slate-700">{STATEMENT_LABEL[s.kind] ?? s.kind}</Badge>
-      <p className="text-sm text-slate-800">{s.text}</p>
+      <Badge className="border-line bg-raised text-ink-2">{STATEMENT_LABEL[s.kind] ?? s.kind}</Badge>
+      <p className="text-sm text-ink">{s.text}</p>
     </div>
   );
 }
@@ -356,6 +385,8 @@ function EventDetail({
   analysisId,
   demo,
   title,
+  rows,
+  onSelect,
 }: {
   event: FaultEvent;
   result: DiagnosticResult;
@@ -364,6 +395,8 @@ function EventDetail({
   analysisId: string;
   demo: boolean;
   title: (f?: string | null) => string;
+  rows: Map<string, FaultEventResponse>;
+  onSelect: (key: string) => void;
 }) {
   const location = useLocation();
   const from = encodeURIComponent(`${location.pathname}?analysis=${analysisId}&event=${event.id}`);
@@ -382,12 +415,12 @@ function EventDetail({
             {row && <ReviewBadge status={row.review_status} />}
           </div>
           <h2 id="event-heading" className="mt-1 text-lg font-semibold">{heading}</h2>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted">
             {formatDataTime(event.start)} to {formatDataTime(event.end)} · {event.hours} h
           </p>
         </div>
         {event.fault && (
-          <Link to={`/library/${event.fault}?from=${from}`} className="inline-flex items-center gap-1 text-sm text-sky-800 hover:underline">
+          <Link to={`/library/${event.fault}?from=${from}`} className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
             <BookOpen aria-hidden="true" className="size-4" />
             About {title(event.fault).toLowerCase()} in the Fault Library
           </Link>
@@ -399,7 +432,7 @@ function EventDetail({
       {(event.model.alternatives?.length ?? 0) > 0 && (
         <section aria-labelledby="alt-heading" className="space-y-2">
           <h3 id="alt-heading" className="text-sm font-semibold">Possible alternatives</h3>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-muted">
             Mean probability over the event for the classes the model considered most likely. A fault is named only at{" "}
             {event.model.cutoff ? formatConfidence(event.model.cutoff) : "the cut-off"} or above.
           </p>
@@ -408,11 +441,11 @@ function EventDetail({
               <li key={a.fault} className="grid grid-cols-[minmax(0,12rem)_1fr_4rem] items-center gap-3 text-sm">
                 <span>
                   {a.fault === "fault_free" ? "Normal operation" : (
-                    <Link to={`/library/${a.fault}?from=${from}`} className="text-sky-800 hover:underline">{title(a.fault)}</Link>
+                    <Link to={`/library/${a.fault}?from=${from}`} className="text-accent hover:underline">{title(a.fault)}</Link>
                   )}
                 </span>
-                <span className="h-2 rounded bg-slate-100" aria-hidden="true">
-                  <span className="block h-2 rounded bg-sky-700" style={{ width: `${Math.max(1, a.probability * 100)}%` }} />
+                <span className="h-2 rounded bg-raised" aria-hidden="true">
+                  <span className="block h-2 rounded bg-accent" style={{ width: `${Math.max(1, a.probability * 100)}%` }} />
                 </span>
                 <span className="text-right tabular-nums">{formatConfidence(a.probability)}</span>
               </li>
@@ -425,18 +458,20 @@ function EventDetail({
         <h3 id="evidence-heading" className="text-sm font-semibold">Measured evidence</h3>
         {event.evidence.length === 0 && <Empty>No signal stood out enough to show as evidence.</Empty>}
         {event.evidence.map((ev) => (
-          <div key={ev.id} className="space-y-2 border-t border-slate-100 pt-3">
+          <div key={ev.id} className="space-y-2 border-t border-line pt-3">
             {evidenceStatement(ev.id) && <StatementBlock s={evidenceStatement(ev.id)!} />}
             {chartFor?.signals[ev.id] ? (
               <EvidenceChart signal={chartFor.signals[ev.id]!} start={chartFor.start} end={chartFor.end} />
             ) : (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted">
                 {ev.kind === "rule" ? "Rule results are a share of minutes, so there is no single signal to chart." : "No chart stored for this signal."}
               </p>
             )}
           </div>
         ))}
       </section>
+
+      <EvidenceWeights event={event} />
 
       <div className="grid gap-4 md:grid-cols-2">
         {by("context").map((s, i) => <StatementBlock key={i} s={s} />)}
@@ -447,7 +482,7 @@ function EventDetail({
         <section aria-labelledby="checks-heading" className="space-y-2">
           <h3 id="checks-heading" className="text-sm font-semibold">Suggested checks</h3>
           {result.library_review_status !== "reviewed" && (
-            <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            <p className="rounded-md border border-warn-line bg-warn-soft px-3 py-2 text-xs text-warn">
               These come from a fault library that hasn't yet been reviewed by an HVAC professional. Treat them as
               suggestions to verify, not instructions.
             </p>
@@ -456,15 +491,17 @@ function EventDetail({
             {by("recommended").map((s, i) => (
               <li key={i}>
                 {s.text}{" "}
-                <span className="text-xs text-slate-500">[{s.refs.map((r) => sources.get(r)?.citation ?? r).join("; ")}]</span>
+                <span className="text-xs text-muted">[{s.refs.map((r) => sources.get(r)?.citation ?? r).join("; ")}]</span>
               </li>
             ))}
           </ol>
         </section>
       )}
 
+      <CaseHistory result={result} event={event} rows={rows} onSelect={onSelect} />
+
       {row && (demo ? (
-        <p className="text-xs text-slate-500">Reviews are disabled in the public demo.</p>
+        <p className="text-xs text-muted">Reviews are disabled in the public demo.</p>
       ) : (
         // Re-mount when the stored review changes, so the form shows what was saved.
         <ReviewForm key={`${row.id}-${row.reviewed_at ?? "none"}`} row={row} analysisId={analysisId} />
@@ -485,9 +522,9 @@ function ReviewForm({ row, analysisId }: { row: FaultEventResponse; analysisId: 
   }
 
   return (
-    <form onSubmit={submit} aria-labelledby={`${id}-h`} className="space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+    <form onSubmit={submit} aria-labelledby={`${id}-h`} className="space-y-3 rounded-md border border-line bg-raised p-3">
       <h3 id={`${id}-h`} className="text-sm font-semibold">Review this event</h3>
-      <p className="text-xs text-slate-600">Record what a technician found. Confirmed outcomes become labelled data for future models.</p>
+      <p className="text-xs text-muted">Record what a technician found. Confirmed outcomes become labelled data for future models.</p>
       <div className="grid gap-3 sm:grid-cols-[14rem_1fr]">
         <Field label="Outcome" htmlFor={`${id}-status`}>
           <select id={`${id}-status`} className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -503,10 +540,10 @@ function ReviewForm({ row, analysisId }: { row: FaultEventResponse; analysisId: 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={review.isPending}>{review.isPending ? "Saving…" : "Save review"}</Button>
         <span aria-live="polite" className="text-xs">
-          {review.isSuccess && <span className="text-emerald-800">Saved.</span>}
-          {review.isError && <span className="text-red-800">{review.error.message}</span>}
+          {review.isSuccess && <span className="text-ok">Saved.</span>}
+          {review.isError && <span className="text-fault">{review.error.message}</span>}
         </span>
-        {row.reviewed_at && <span className="text-xs text-slate-500">Last reviewed {formatDateTime(row.reviewed_at)}</span>}
+        {row.reviewed_at && <span className="text-xs text-muted">Last reviewed {formatDateTime(row.reviewed_at)}</span>}
       </div>
     </form>
   );

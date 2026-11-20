@@ -1,43 +1,91 @@
-import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Page } from "@playwright/test";
 
 import { event, faultTitle, mockApi } from "./fixtures";
 
-// The Phase 7 exit criterion: overview -> a specific diagnosis -> the fault reference -> back,
-// without broken navigation or unexplained placeholder values.
-test("a user moves from the dashboard to a diagnosis, the fault reference and back", async ({ page }) => {
+async function persona(page: Page, who: "operator" | "technician", theme: "light" | "dark" = "light") {
+  await page.addInitScript(
+    ([p, t]) => {
+      window.localStorage.setItem("faultiq.persona", p);
+      window.localStorage.setItem("faultiq.theme", t);
+    },
+    [who, theme],
+  );
+}
+
+async function noA11yViolations(page: Page) {
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+  expect(results.violations.map((v) => `${v.id}: ${v.nodes.length} × ${v.help}`)).toEqual([]);
+}
+
+async function noPlaceholders(page: Page) {
+  await expect(page.getByText(/undefined|NaN|\[object Object\]/)).toHaveCount(0);
+}
+
+// The exit journeys: overview -> a specific diagnosis -> the fault reference -> back, for both
+// personas, without broken navigation or unexplained placeholder values (ADR 0025, 0026).
+
+test("operator: home to a unit's plain summary, then into the technician view of the same case", async ({ page }) => {
+  await persona(page, "operator");
   await mockApi(page);
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-  await expect(page.getByRole("row", { name: /RTU-1/ }).getByText("Fault detected")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "How are your rooftop units?" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Operator" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("link", { name: /RTU-1/ }).first().click();
+  await expect(page.getByRole("heading", { name: "Dirty outdoor coil" })).toBeVisible();
+  await expect(page.getByText("What to do")).toBeVisible();
+  await expect(page.getByRole("img", { name: /Problem area: Outdoor \(condenser\) coil/ })).toBeVisible();
+  await noPlaceholders(page);
+  await noA11yViolations(page);
 
-  await page.getByRole("link", { name: "RTU-1" }).click();
-  await expect(page.getByRole("heading", { name: "Fault diagnostics: RTU-1" })).toBeVisible();
+  await page.getByRole("button", { name: "Open technician view" }).click();
+  await expect(page.getByRole("heading", { name: "Diagnostic workbench: RTU-1" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Fault signature check" })).toBeVisible();
+});
+
+test("technician: work queue to the workbench, the fault library and back", async ({ page }) => {
+  await persona(page, "technician", "dark");
+  await mockApi(page);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Work queue" })).toBeVisible();
+  await noA11yViolations(page);
+
+  await page.getByRole("link", { name: faultTitle }).first().click();
+  await expect(page.getByRole("heading", { name: "Diagnostic workbench: RTU-1" })).toBeVisible();
+  await expect(page.getByRole("img", { name: /Rooftop unit schematic at/ })).toBeVisible();
+  await expect(page.getByText(/1 of 1 signals support it/).first()).toBeVisible();
   const detail = page.getByRole("region", { name: faultTitle });
   await expect(detail.getByText("Model inference", { exact: true })).toBeVisible();
   await expect(detail.getByText(event.statements[0].text)).toBeVisible();
-  await expect(detail.getByRole("heading", { name: "Possible alternatives" })).toBeVisible();
-  await expect(detail.getByRole("heading", { name: "Measured evidence" })).toBeVisible();
-  await expect(detail.getByText(/hasn't yet been reviewed by an HVAC professional/)).toBeVisible();
-  await expect(page.getByText(/undefined|NaN|\[object Object\]/)).toHaveCount(0);
+  await noPlaceholders(page);
+  await noA11yViolations(page);
 
   await detail.getByRole("link", { name: /in the Fault Library/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: faultTitle })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Symptoms" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "References" })).toBeVisible();
-
+  await expect(page.getByRole("heading", { name: "Where it shows on the unit" })).toBeVisible();
+  await noA11yViolations(page);
   await page.getByRole("link", { name: "Back to the diagnosis" }).click();
-  await expect(page.getByRole("heading", { name: "Fault diagnostics: RTU-1" })).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`event=${event.id}`));
 });
 
-test("the library is searchable by symptom and every entry opens", async ({ page }) => {
+test("the equipment switcher announces types that aren't supported yet", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: /Equipment type/ }).click();
+  await page.getByRole("menuitem", { name: /Air handling units/ }).click();
+  await expect(page.getByRole("dialog")).toContainText("available in a future release");
+});
+
+test("the library is searchable by symptom in both personas", async ({ page }) => {
+  await persona(page, "operator", "dark");
   await mockApi(page);
   await page.goto("/library");
   await page.getByLabel("Search by fault or symptom").fill("discharge");
-  await expect(page.getByRole("link", { name: faultTitle })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Dirty outdoor coil/ })).toBeVisible();
+  await noA11yViolations(page);
 });
 
-test("keyboard users can skip to content and reach the main navigation", async ({ page }) => {
+test("keyboard users can skip to content", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
   await page.keyboard.press("Tab");
@@ -47,10 +95,11 @@ test("keyboard users can skip to content and reach the main navigation", async (
 });
 
 test("errors offer a retry, and demo mode labels sample data and hides uploads", async ({ page }) => {
+  await persona(page, "technician");
   await mockApi(page, { failOverview: true });
   await page.goto("/");
-  await expect(page.getByRole("alert")).toContainText("An unexpected error occurred.");
-  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect(page.getByRole("alert").first()).toContainText("An unexpected error occurred.");
+  await expect(page.getByRole("button", { name: "Try again" }).first()).toBeVisible();
 
   await page.unrouteAll({ behavior: "ignoreErrors" });
   await mockApi(page, { demo: true });

@@ -297,6 +297,14 @@ def explain(
     minutes: pl.DataFrame, diag: Diagnoser, source: str, library: FaultLibrary | None = None
 ) -> DiagnosticResult:
     """Run the workflow on one processed file and return a checked result."""
+    return analyse_file(minutes, diag, source, library)[0]
+
+
+def analyse_file(
+    minutes: pl.DataFrame, diag: Diagnoser, source: str, library: FaultLibrary | None = None
+) -> tuple[DiagnosticResult, pl.DataFrame]:
+    """The workflow, plus its hour-by-hour table (context, features, alarm, answer), which the
+    chart series reuse so the timelines show exactly what the workflow decided."""
     missing = [c for c in REQUIRED_COLUMNS if c not in minutes.columns]
     if missing:  # step 1: only Phase 2 output is accepted
         raise ValueError(f"{source}: not a processed file, missing {missing}")
@@ -328,7 +336,7 @@ def explain(
     problems = check_result(result, library)
     if problems:  # step 6: fail closed
         raise ExplanationError("; ".join(problems[:5]))
-    return result
+    return result, hours
 
 
 def as_json(result: DiagnosticResult) -> dict[str, Any]:

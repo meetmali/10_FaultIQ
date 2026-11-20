@@ -79,6 +79,16 @@ public sealed class UploadValidationTests(ApiFactory factory) : IClassFixture<Ap
     }
 
     [Fact]
+    public async Task EquipmentTypes_ListRooftopUnitsAsTheOnlyAvailableType()
+    {
+        var types = await factory.CreateClient().GetFromJsonAsync<JsonElement>(new Uri("/api/v1/equipment-types", UriKind.Relative));
+        var available = types.EnumerateArray().Where(t => t.GetProperty("status").GetString() == "available")
+            .Select(t => t.GetProperty("id").GetString()).ToList();
+        Assert.Equal(["rtu"], available);
+        Assert.Equal(5, types.GetArrayLength());
+    }
+
+    [Fact]
     public void Model_HasNoChangesMissingFromMigrations()
     {
         using var scope = factory.Services.CreateScope();
@@ -247,6 +257,10 @@ public sealed class DatabaseEndpointTests(DatabaseFactory factory) : IClassFixtu
         Assert.Equal("confirmed", reviewed.GetProperty("review_status").GetString());
         Assert.NotEqual(JsonValueKind.Null, reviewed.GetProperty("reviewed_at").ValueKind);
 
+        var byHours = await client.GetFromJsonAsync<JsonElement>(Url("/api/v1/fault-events?order=hours&page_size=100"));
+        var hours = byHours.GetProperty("items").EnumerateArray().Select(e => e.GetProperty("hours").GetInt32()).ToList();
+        Assert.Equal(hours.OrderByDescending(h => h), hours);
+
         var confirmed = await client.GetFromJsonAsync<JsonElement>(Url("/api/v1/fault-events?review_status=confirmed"));
         Assert.Contains(confirmed.GetProperty("items").EnumerateArray(), e => e.GetProperty("id").GetGuid() == eventId);
     }
@@ -267,6 +281,11 @@ public sealed class DatabaseEndpointTests(DatabaseFactory factory) : IClassFixtu
         var summary = await client.GetFromJsonAsync<JsonElement>(Url($"/api/v1/fault-events/summary?equipment_id={faulty}"));
         Assert.Equal(1, summary.GetProperty("events").GetInt32());
         Assert.Equal(5, summary.GetProperty("hours").GetInt32());
+
+        // The 5-hour event is split across the calendar days it covers.
+        var daily = await client.GetFromJsonAsync<JsonElement>(Url($"/api/v1/fault-events/daily?equipment_id={faulty}"));
+        Assert.Equal(5, daily.EnumerateArray().Sum(d => d.GetProperty("hours").GetInt32()));
+        Assert.All(daily.EnumerateArray(), d => Assert.Equal(1, d.GetProperty("units").GetInt32()));
 
         var sites = await client.GetFromJsonAsync<JsonElement>(Url("/api/v1/equipment/sites"));
         Assert.Contains(sites.EnumerateArray(), x => x.GetProperty("site").GetString() == "Test site");

@@ -1,5 +1,7 @@
 import type {
   AnalysisResponse,
+  DailyFaultHours,
+  EquipmentTypeResponse,
   ChartSeries,
   DiagnosticResult,
   EquipmentOverview,
@@ -110,6 +112,7 @@ export const listFaultEvents = (query?: {
   analysis_id?: string;
   site?: string;
   review_status?: string;
+  order?: "recent" | "hours";
   kind?: string;
   fault?: string;
   from?: string;
@@ -134,3 +137,8 @@ export const listFaultLibrary = (query?: { q?: string; equipment?: string }) =>
 
 export const getFaultLibraryEntry = (id: string) =>
   request<LibraryFaultResponse>(`/fault-library/${encodeURIComponent(id)}`);
+
+export const listEquipmentTypes = () => request<EquipmentTypeResponse[]>("/equipment-types");
+
+export const dailyFaultHours = (query?: { equipment_id?: string; site?: string; from?: string; to?: string }) =>
+  request<DailyFaultHours[]>("/fault-events/daily", { query });

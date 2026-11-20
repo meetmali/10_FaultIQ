@@ -68,6 +68,7 @@ v1.MapUploadEndpoints();
 v1.MapAnalysisEndpoints();
 v1.MapFaultEventEndpoints();
 v1.MapFaultLibraryEndpoints();
+v1.MapEquipmentTypeEndpoints();
 
 await app.MigrateIfConfiguredAsync();
 

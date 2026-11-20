@@ -22,8 +22,9 @@ from faultiq.explain.schema import (
     Statement,
     json_schema,
 )
+from faultiq.explain.series import build_series
 from faultiq.explain.text import fmt, numbers
-from faultiq.explain.workflow import Diagnoser, explain
+from faultiq.explain.workflow import Diagnoser, analyse_file, explain
 from tests.test_detection import minutes, normal_frame
 
 LIB = fault_library()
@@ -267,6 +268,32 @@ def test_workflow_finds_explains_and_checks_a_fault_without_seeing_a_label() -> 
     assert result.library_review_status == "unreviewed"
     # Times are as recorded, explicitly marked, so no reader shifts them by its own zone.
     assert event.start.utcoffset() is not None and event.start.hour == 2
+
+
+def test_series_v2_hourly_table_is_aligned_and_diagnostic() -> None:
+    """Every hourly column has one value per hour, and residuals carry their fault-free band."""
+    oat = 20.0
+    sat = [12 + 0.1 * oat] * 120 + [12 + 0.1 * oat + 5] * 180
+    df = minutes(
+        300, oat=oat, rat=23.0, comp_stage=1.0, sat=sat,
+        rat_minus_sat=[23 - x for x in sat], zone_temp_error=0.0,
+    )  # fmt: skip
+    diag = _diagnoser()
+    result, hours = analyse_file(df, diag, "unit.csv")
+    series = build_series(df, result, diag.models, hours, diag.ranges)
+    assert series["version"] == 2
+    hourly = series["hourly"]
+    n = len(hourly["t"])
+    assert n == 5
+    assert all(len(hourly[k]) == n for k in ("mode", "diagnosable", "alarm", "answer"))
+    assert all(len(c["values"]) == n for c in hourly["columns"].values())
+    resid = hourly["columns"]["resid:sat"]
+    assert resid["kind"] == "residual" and (resid["normal_low"], resid["normal_high"]) == (
+        -1.0,
+        1.0,
+    )
+    assert hourly["alarm"] == [False, False, True, True, True]
+    assert hourly["columns"]["sat"]["kind"] == "signal"
 
 
 def test_workflow_refuses_unprocessed_input() -> None:

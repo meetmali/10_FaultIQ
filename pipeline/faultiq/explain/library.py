@@ -23,6 +23,10 @@ class FaultInfo:
     definition: Check | None = None  # cited text: same shape as a check
     observed: Check | None = None
     causes: tuple[Check, ...] = ()
+    plain_name: str = ""
+    component: str = ""
+    plain_summary: Check | None = None
+    what_to_do: Check | None = None
 
 
 @dataclass(frozen=True)
@@ -62,6 +66,10 @@ def parse_library(text: str) -> FaultLibrary:
             definition=cited(f.get("definition"), name),
             observed=cited(f.get("observed"), name),
             causes=tuple(c for c in (cited(x, name) for x in f.get("causes", [])) if c),
+            plain_name=f.get("plain_name", f["title"]),
+            component=f.get("component", ""),
+            plain_summary=cited(f.get("plain_summary"), name),
+            what_to_do=cited(f.get("what_to_do"), name),
         )
     return FaultLibrary(raw.get("review_status", "unreviewed"), sources, faults)
 

@@ -25,6 +25,7 @@ public sealed record FaultMeasurements(
 
 public sealed record LibraryFault(
     string Id, string Title, string Equipment, string Dataset, string DatasetLabel, string IntensityUnit,
+    string PlainName, string Component, CitedText? PlainSummary, CitedText? WhatToDo,
     CitedText? Definition, CitedText? Observed, IReadOnlyList<CitedText> Causes, IReadOnlyList<CitedText> Checks,
     FaultMeasurements Measured);
 
@@ -52,7 +53,7 @@ public sealed class FaultLibraryStore
 
     /// <summary>Case-insensitive search over names, equipment, symptoms, causes and observations.</summary>
     public static bool Matches(LibraryFault f, string q) =>
-        new[] { f.Id, f.Title, f.Equipment, f.DatasetLabel, f.Observed?.Text, f.Definition?.Text }
+        new[] { f.Id, f.Title, f.PlainName, f.Equipment, f.DatasetLabel, f.Observed?.Text, f.Definition?.Text, f.PlainSummary?.Text }
             .Concat(f.Measured.Symptoms.Select(s => s.Signal))
             .Concat(f.Causes.Select(c => c.Text))
             .Any(t => t?.Contains(q, StringComparison.OrdinalIgnoreCase) == true);
@@ -82,7 +83,7 @@ public static class FaultLibraryEndpoints
                 return Problems.NotFound("Fault");
             }
 
-            var cited = new[] { fault.Definition, fault.Observed }.OfType<CitedText>()
+            var cited = new[] { fault.Definition, fault.Observed, fault.PlainSummary, fault.WhatToDo }.OfType<CitedText>()
                 .Concat(fault.Causes).Concat(fault.Checks).Select(c => c.Source)
                 .Append(fault.Measured.Source).ToHashSet();
             return TypedResults.Ok(new LibraryFaultResponse(doc.ReviewStatus, fault,

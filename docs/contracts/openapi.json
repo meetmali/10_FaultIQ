@@ -60,6 +60,29 @@
         }
       }
     },
+    "/api/v1/equipment-types": {
+      "get": {
+        "tags": [
+          "equipment-types"
+        ],
+        "operationId": "ListEquipmentTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EquipmentTypeResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/equipment": {
       "post": {
         "tags": [
@@ -593,6 +616,13 @@
             }
           },
           {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -669,6 +699,62 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FaultEventSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fault-events/daily": {
+      "get": {
+        "tags": [
+          "fault-events"
+        ],
+        "operationId": "DailyFaultHours",
+        "parameters": [
+          {
+            "name": "equipment_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "site",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DailyFaultHours"
+                  }
                 }
               }
             }
@@ -1006,6 +1092,32 @@
           }
         }
       },
+      "DailyFaultHours": {
+        "required": [
+          "date",
+          "kind",
+          "hours",
+          "units"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "EquipmentOverview": {
         "required": [
           "id",
@@ -1114,6 +1226,29 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "EquipmentTypeResponse": {
+        "required": [
+          "id",
+          "name",
+          "status",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
           }
         }
       },
@@ -1380,6 +1515,10 @@
           "dataset",
           "dataset_label",
           "intensity_unit",
+          "plain_name",
+          "component",
+          "plain_summary",
+          "what_to_do",
           "definition",
           "observed",
           "causes",
@@ -1405,6 +1544,32 @@
           },
           "intensity_unit": {
             "type": "string"
+          },
+          "plain_name": {
+            "type": "string"
+          },
+          "component": {
+            "type": "string"
+          },
+          "plain_summary": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CitedText"
+              }
+            ]
+          },
+          "what_to_do": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CitedText"
+              }
+            ]
           },
           "definition": {
             "oneOf": [
@@ -1800,6 +1965,9 @@
   "tags": [
     {
       "name": "health"
+    },
+    {
+      "name": "equipment-types"
     },
     {
       "name": "equipment"

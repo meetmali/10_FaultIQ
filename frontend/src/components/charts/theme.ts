@@ -8,6 +8,6 @@ export const KIND_SHADE: Record<string, string> = {
   not_diagnosable: "rgba(100, 116, 139, 0.14)",
 };
 
-export const LINE_COLORS = ["#0369a1", "#b45309", "#047857", "#7c3aed", "#be123c"];
+export const LINE_COLORS = ["#0284c7", "#d97706", "#059669", "#7c3aed", "#e11d48", "#0891b2", "#65a30d"];
 
 export const axisName = (unit: string) => unitLabel(unit) || undefined;

@@ -18,6 +18,9 @@ public sealed record FaultEventSummaryItem(string Kind, string? Fault, int Event
 
 public sealed record FaultEventSummaryResponse(IReadOnlyList<FaultEventSummaryItem> Items, int Events, int Hours);
 
+/// <summary>Event hours on one calendar day of the data, by kind: the Operator's issue calendar.</summary>
+public sealed record DailyFaultHours(DateOnly Date, string Kind, int Hours, int Units);
+
 public static class FaultEventEndpoints
 {
     private static IQueryable<FaultEvent> Filter(
@@ -85,13 +88,17 @@ public static class FaultEventEndpoints
             [FromQuery] string? site, [FromQuery] string? kind, [FromQuery] string? fault,
             [FromQuery(Name = "review_status")] string? reviewStatus,
             [FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to,
+            [FromQuery] string? order,
             [FromQuery] int? page, [FromQuery(Name = "page_size")] int? pageSize) =>
         {
             var p = new PageQuery(page, pageSize);
             var q = Filter(db, equipmentId, analysisId, site, kind, fault, reviewStatus, from, to);
             var total = await q.CountAsync(ct);
-            var rows = await q.OrderByDescending(e => e.StartsAt).ThenBy(e => e.Id)
-                .Skip(p.Skip).Take(p.Size).ToListAsync(ct);
+            // "hours": longest and most confident first, for the technician's work queue (ADR 0026).
+            var ordered = order == "hours"
+                ? q.OrderByDescending(e => e.Hours).ThenByDescending(e => e.Confidence).ThenBy(e => e.Id)
+                : q.OrderByDescending(e => e.StartsAt).ThenBy(e => e.Id);
+            var rows = await ordered.Skip(p.Skip).Take(p.Size).ToListAsync(ct);
             return TypedResults.Ok(new PagedResult<FaultEventResponse>(rows.Select(ToResponse).ToList(),
                 p.Number, p.Size, total));
         }).WithName("ListFaultEvents");
@@ -108,6 +115,32 @@ public static class FaultEventEndpoints
             items = items.OrderByDescending(i => i.Hours).ThenBy(i => i.Fault).ToList();
             return TypedResults.Ok(new FaultEventSummaryResponse(items, items.Sum(i => i.Events), items.Sum(i => i.Hours)));
         }).WithName("SummariseFaultEvents");
+
+        // Events can span days, so each event's alarmed hours are split across the days they fall on.
+        g.MapGet("/daily", async (
+            FaultIqDbContext db, CancellationToken ct,
+            [FromQuery(Name = "equipment_id")] Guid? equipmentId, [FromQuery] string? site,
+            [FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to) =>
+        {
+            var events = await Filter(db, equipmentId, null, site, null, null, null, from, to)
+                .Select(e => new { e.EquipmentId, e.Kind, e.StartsAt, e.Hours }).ToListAsync(ct);
+            var cells = new Dictionary<(DateOnly, string), (int Hours, HashSet<Guid> Units)>();
+            foreach (var e in events)
+            {
+                // Count the event's alarmed hours (not its clock span, which can include a quiet hour).
+                for (var i = 0; i < e.Hours; i++)
+                {
+                    var h = e.StartsAt.UtcDateTime.AddHours(i);
+                    var key = (DateOnly.FromDateTime(h), e.Kind);
+                    var cell = cells.TryGetValue(key, out var found) ? found : (Hours: 0, Units: new HashSet<Guid>());
+                    cell.Units.Add(e.EquipmentId);
+                    cells[key] = (cell.Hours + 1, cell.Units);
+                }
+            }
+
+            return TypedResults.Ok(cells.OrderBy(c => c.Key.Item1).ThenBy(c => c.Key.Item2)
+                .Select(c => new DailyFaultHours(c.Key.Item1, c.Key.Item2, c.Value.Hours, c.Value.Units.Count)).ToList());
+        }).WithName("DailyFaultHours");
 
         g.MapGet("/{id:guid}", async Task<Results<Ok<FaultEventResponse>, ProblemHttpResult>> (
             Guid id, FaultIqDbContext db, CancellationToken ct) =>

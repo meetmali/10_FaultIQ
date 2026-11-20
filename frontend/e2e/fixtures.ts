@@ -42,7 +42,31 @@ function series() {
       return [ev.id, { label: ev.signal, unit: ev.unit, t: w.t, observed: w.v, ...(ev.kind === "residual" ? { expected: w.v.map((x) => x * 0.96) } : {}) }];
     }),
   );
-  return { version: 1, overview, events: { [event.id]: { start: s, end: e, signals } } };
+  // Series v2 hourly table: synthetic, aligned, with one residual far outside its band in the event.
+  const hours = Array.from({ length: 24 * 20 }, (_, i) => start + i * 3_600_000);
+  const inEvent = hours.map((t) => t >= s && t < e);
+  const hourly = {
+    t: hours,
+    mode: hours.map(() => "cooling"),
+    steady_minutes: hours.map(() => 55),
+    diagnosable: hours.map(() => true),
+    alarm: inEvent,
+    answer: inEvent.map((x) => (x ? event.fault : "fault_free")),
+    confidence: inEvent.map((x) => (x ? 0.99 : 0.6)),
+    columns: {
+      sat: { label: "supply-air temperature", unit: "degC", kind: "signal", values: hours.map(() => 11.2) },
+      refg_disc_pres: { label: "discharge pressure", unit: "kPa", kind: "signal", values: hours.map((_, i) => (inEvent[i] ? 1890 : 1800)) },
+      "resid:refg_disc_pres": {
+        label: "discharge pressure", unit: "errors", kind: "residual", values: hours.map((_, i) => (inEvent[i] ? 5.8 : 0.1)),
+        normal_low: -0.8, normal_high: 0.7,
+      },
+      "med:condensing_approach": {
+        label: "condensing approach temperature", unit: "K", kind: "physics", values: hours.map((_, i) => (inEvent[i] ? 15 : 12)),
+        normal_low: 9.2, normal_high: 13.3,
+      },
+    },
+  };
+  return { version: 2, overview, events: { [event.id]: { start: s, end: e, signals } }, hourly };
 }
 
 const analysis = {
@@ -79,6 +103,16 @@ export async function mockApi(p: Page, { demo = false, failOverview = false } = 
       }]));
     }
     if (path === "/equipment/sites") return json(route, [{ site: "Simulated office", equipment: 1 }]);
+    if (path === "/equipment-types") {
+      return json(route, [
+        { id: "rtu", name: "Rooftop units", status: "available", description: "" },
+        { id: "ahu", name: "Air handling units", status: "coming_soon", description: "" },
+        { id: "vav", name: "VAV boxes / terminal units", status: "coming_soon", description: "" },
+      ]);
+    }
+    if (path === "/fault-events/daily") {
+      return json(route, [{ date: event.start.slice(0, 10), kind: "fault", hours: 18, units: 1 }]);
+    }
     if (path === `/equipment/${EQUIPMENT_ID}`) return json(route, { id: EQUIPMENT_ID, name: "RTU-1", site: "Simulated office", created_at: "2026-11-19T09:30:00Z" });
     if (path === "/analyses") return json(route, page([analysis]));
     if (path === `/analyses/${ANALYSIS_ID}`) return json(route, analysis);

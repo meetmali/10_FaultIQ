@@ -129,9 +129,16 @@ With the API and worker running and models trained, load eight sample units thro
 python3 scripts/seed_demo.py data/raw/LBNL_FDD_Data_Sets_RTU_all_3 --api http://localhost:8000
 ```
 
-Then open http://localhost:5173. The **Dashboard** lists each unit's status and recent fault events.
-Open a unit for **Fault Diagnostics** (evidence charts, alternatives, cited checks and a review
-form), and follow a fault into the **Fault Library**. For the public demo, seed first, then set
+Then open http://localhost:5173. Two views share every screen; switch with the toggle in the header
+(ADR 0026):
+
+- **Operator** (default): fleet health, units needing attention drawn as animated rooftop units with the
+  faulty part highlighted, plain-language summaries with what to do, and an issue calendar.
+- **Technician**: a work queue of unreviewed faults and a diagnostic workbench with a live unit schematic,
+  a fault signature check, expected-versus-measured explorer, operating-context timeline, evidence,
+  cited checks and a review form.
+
+Both have light and dark themes, and both lead into the **Fault Library**. For the public demo, seed first, then set
 `DEMO_MODE=true`: the demo rejects every write.
 
 ### Tests and checks

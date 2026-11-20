@@ -1,5 +1,8 @@
 # FaultIQ fault library (ADR 0023).
 #
+# Plain-language fields (plain_name, plain_summary, what_to_do, component) serve the Operator view
+# (ADR 0026); they restate the measured and cited material in everyday words and cite it too.
+#
 # One entry per supported fault: a title, how the fault is defined in the reference data, what FaultIQ
 # measured for it, likely real-world causes, and 2-3 checks a technician can do on site. Every text
 # names the source it is taken from. Citations are to whole documents, not clauses.
@@ -35,6 +38,10 @@ url = "https://github.com/meetmali/FaultIQ/blob/main/docs/diagnosis-report.md"
 
 [faults.condenser_fouling]
 title = "Condenser fouling"
+plain_name = "Dirty outdoor coil"
+component = "condenser"
+plain_summary = { text = "The unit struggles to get rid of heat, so it runs at higher pressure and uses more power to cool.", source = "faultiq-eda" }
+what_to_do = { text = "Ask an HVAC technician to inspect and clean the outdoor (condenser) coil and check its fans.", source = "ashrae-180" }
 equipment = "Refrigerant circuit"
 intensity_unit = "% condenser airflow reduction"
 definition = { text = "Modelled as reduced condenser fan mass flow, 10% to 50% in five levels.", source = "lbnl-rtu" }
@@ -50,6 +57,10 @@ checks = [
 
 [faults.evaporator_fouling]
 title = "Evaporator fouling (low indoor airflow)"
+plain_name = "Low airflow through the unit"
+component = "evaporator"
+plain_summary = { text = "Less air passes over the cooling coil, so the air leaving the unit gets much colder and comfort suffers.", source = "faultiq-eda" }
+what_to_do = { text = "Ask an HVAC technician to check the filters, the indoor coil and the supply fan.", source = "ashrae-180" }
 equipment = "Refrigerant circuit"
 intensity_unit = "% evaporator airflow reduction"
 definition = { text = "Modelled as reduced evaporator fan mass flow, 10% to 50% in five levels.", source = "lbnl-rtu" }
@@ -67,6 +78,10 @@ checks = [
 
 [faults.liquid_line_restriction]
 title = "Liquid-line restriction"
+plain_name = "Blocked refrigerant line (liquid side)"
+component = "liquid_line"
+plain_summary = { text = "Refrigerant can't flow freely to the cooling coil; when severe, the unit cools poorly and cycles less.", source = "faultiq-eda" }
+what_to_do = { text = "Ask a qualified refrigeration technician to measure pressures and check the filter drier.", source = "ashrae-180" }
 equipment = "Refrigerant circuit"
 intensity_unit = "bar pressure drop"
 definition = { text = "Modelled as a pressure drop after the condenser outlet: 1, 4, 8 and 10 bar.", source = "lbnl-rtu" }
@@ -82,6 +97,10 @@ checks = [
 
 [faults.suction_line_restriction]
 title = "Suction-line restriction"
+plain_name = "Blocked refrigerant line (suction side)"
+component = "suction_line"
+plain_summary = { text = "Refrigerant can't return freely to the compressor, so the unit runs almost nonstop and delivers warmer air.", source = "faultiq-eda" }
+what_to_do = { text = "Ask a qualified refrigeration technician to measure suction pressure and inspect the suction line.", source = "ashrae-180" }
 equipment = "Refrigerant circuit"
 intensity_unit = "bar pressure drop"
 definition = { text = "Modelled as a pressure drop after the evaporator outlet: 1, 3, 6 and 9 bar.", source = "lbnl-rtu" }
@@ -97,6 +116,10 @@ checks = [
 
 [faults.refrigerant_overcharge]
 title = "Refrigerant overcharge"
+plain_name = "Too much refrigerant"
+component = "refrigerant_circuit"
+plain_summary = { text = "The refrigerant charge is above specification; effects in tests were small and inconsistent.", source = "faultiq-eda" }
+what_to_do = { text = "Ask a qualified refrigeration technician to verify the charge with the manufacturer's method.", source = "ashrae-180" }
 equipment = "Refrigerant circuit"
 intensity_unit = "% overcharge"
 definition = { text = "Modelled as a lower refrigerant enthalpy: 10%, 15% and 20% overcharge.", source = "lbnl-rtu" }
@@ -110,6 +133,10 @@ checks = [
 
 [faults.refrigerant_undercharge]
 title = "Refrigerant undercharge"
+plain_name = "Low refrigerant"
+component = "refrigerant_circuit"
+plain_summary = { text = "The refrigerant charge is below specification, often from a leak; effects in tests were small.", source = "faultiq-eda" }
+what_to_do = { text = "Ask a qualified refrigeration technician to check for leaks and verify the charge.", source = "ashrae-180" }
 equipment = "Refrigerant circuit"
 intensity_unit = "% undercharge"
 definition = { text = "Modelled as a higher refrigerant enthalpy: 10%, 15% and 20% undercharge.", source = "lbnl-rtu" }
@@ -125,6 +152,10 @@ checks = [
 
 [faults.oa_damper_stuck]
 title = "Outdoor-air damper stuck"
+plain_name = "Fresh-air damper stuck"
+component = "oa_damper"
+plain_summary = { text = "The outdoor-air damper doesn't move with its command, so the unit lets in the wrong amount of outdoor air.", source = "faultiq-eda" }
+what_to_do = { text = "Ask a technician to test the damper through its full range and inspect the actuator and linkage.", source = "title24-econ-fdd" }
 equipment = "Economizer and controls"
 intensity_unit = "% open"
 definition = { text = "Imposed through the damper control signal: stuck at 5%, 10%, 50% and 100% open.", source = "lbnl-rtu" }
@@ -141,6 +172,10 @@ checks = [
 
 [faults.economizer_setpoint_offset]
 title = "Economizer setpoint offset"
+plain_name = "Free-cooling setpoint wrong"
+component = "controller"
+plain_summary = { text = "The unit switches to free cooling with outdoor air at the wrong temperature.", source = "lbnl-rtu" }
+what_to_do = { text = "Ask a controls technician to compare the economizer setpoint with the design sequence.", source = "title24-econ-fdd" }
 equipment = "Economizer and controls"
 intensity_unit = "°C offset from the 10 °C setpoint"
 definition = { text = "The economizer enable setpoint offset by -4, -2, +2 and +4 °C from the correct 10 °C.", source = "lbnl-rtu" }
@@ -155,6 +190,10 @@ checks = [
 
 [faults.sat_sensor_bias]
 title = "Supply-air temperature sensor bias"
+plain_name = "Supply-air sensor reading wrong"
+component = "sat_sensor"
+plain_summary = { text = "The supply-air temperature sensor reads high or low, so the unit controls to the wrong temperature without showing it.", source = "faultiq-eda" }
+what_to_do = { text = "Ask a technician to check the supply-air sensor against a calibrated thermometer.", source = "ashrae-180" }
 equipment = "Sensors"
 intensity_unit = "°C bias"
 definition = { text = "The supply-air temperature reading biased by -4, -2, +2 and +4 °C; the recorded value is the biased one.", source = "lbnl-rtu" }

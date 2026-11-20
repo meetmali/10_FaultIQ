@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactNode } from "react";
 
+import { usePreferences } from "../../app/preferences";
 import { formatValue, unitLabel } from "../../lib/format";
 import type { ChartOption } from "./EChart";
 
@@ -41,25 +42,26 @@ export function ChartFigure({
   downsampled?: boolean;
   footer?: ReactNode;
 }) {
+  const { dark } = usePreferences();
   return (
     <figure className="space-y-2">
       <figcaption>
-        <span className="text-sm font-medium text-slate-900">{title}</span>
-        <span className="block text-xs text-slate-600">
+        <span className="text-sm font-medium text-ink">{title}</span>
+        <span className="block text-xs text-muted">
           {description}
           {downsampled && " Downsampled for display; analysis uses every minute."}
         </span>
       </figcaption>
       <div role="img" aria-label={`${title}. ${description}`}>
-        <Suspense fallback={<div style={{ height: height ?? 280 }} className="animate-pulse rounded bg-slate-100" />}>
-          <EChart option={option} height={height} />
+        <Suspense fallback={<div style={{ height: height ?? 280 }} className="animate-pulse rounded bg-raised" />}>
+          <EChart option={option} height={height} dark={dark} />
         </Suspense>
       </div>
       {summary.length > 0 && (
-      <details className="text-xs text-slate-700">
-        <summary className="cursor-pointer text-sky-800">Data summary</summary>
+      <details className="text-xs text-ink-2">
+        <summary className="cursor-pointer text-accent">Data summary</summary>
         <table className="mt-2 w-full text-left [&_td]:px-2 [&_th]:px-2">
-          <thead className="text-slate-500">
+          <thead className="text-muted">
             <tr>
               <th className="py-1 font-medium">Series</th>
               <th className="font-medium">Min</th>
@@ -71,7 +73,7 @@ export function ChartFigure({
             {summary.map((s) => {
               const st = stats(s.values);
               return (
-                <tr key={s.label} className="border-t border-slate-100">
+                <tr key={s.label} className="border-t border-line">
                   <th scope="row" className="py-1 font-normal">
                     {s.label} {unitLabel(s.unit) && `(${unitLabel(s.unit)})`}
                   </th>

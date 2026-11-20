@@ -30,5 +30,6 @@ When a decision changes, write a new ADR that supersedes the old one. Don't rewr
 | [0023](0023-explanations.md) | Evidence-grounded explanations and the diagnostic result contract | Accepted |
 | [0024](0024-api-persistence-and-jobs.md) | API, persistence and the analysis job loop | Accepted |
 | [0025](0025-frontend-screens.md) | Frontend screens, fault library content and human review | Accepted |
+| [0026](0026-persona-redesign.md) | Persona-based redesign: Operator and Technician views | Accepted |
 
 Template: copy [`template.md`](template.md).

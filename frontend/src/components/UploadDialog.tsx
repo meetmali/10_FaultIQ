@@ -50,12 +50,12 @@ export function UploadDialog({ equipment }: { equipment: EquipmentOverview[] }) 
         </Button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-slate-900/40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-5 shadow-xl">
+        <Dialog.Overlay className="fixed inset-0 bg-black/40" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-5 shadow-xl">
           <div className="mb-4 flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-lg font-semibold">Analyse new data</Dialog.Title>
-              <Dialog.Description className="text-sm text-slate-600">
+              <Dialog.Description className="text-sm text-muted">
                 Upload a CSV export. FaultIQ validates it, then runs detection, diagnosis and explanation.
               </Dialog.Description>
             </div>
@@ -114,7 +114,7 @@ export function UploadDialog({ equipment }: { equipment: EquipmentOverview[] }) 
               <input id={`${id}-file`} name="file" type="file" accept=".csv,text/csv" className="text-sm" required />
             </Field>
             {error && (
-              <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+              <p role="alert" className="rounded-md border border-fault-line bg-fault-soft px-3 py-2 text-sm text-fault">
                 {error}
               </p>
             )}

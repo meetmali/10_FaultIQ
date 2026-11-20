@@ -19,6 +19,8 @@ export type LibraryFaultResponse = Schemas["LibraryFaultResponse"];
 export type LibraryFault = Schemas["LibraryFault"];
 export type LibrarySource = Schemas["LibrarySource"];
 export type CitedText = Schemas["CitedText"];
+export type EquipmentTypeResponse = Schemas["EquipmentTypeResponse"];
+export type DailyFaultHours = Schemas["DailyFaultHours"];
 
 /** Derived equipment status (ADR 0025). */
 export type EquipmentStatus = "no_data" | "analysing" | "analysis_failed" | "fault" | "abnormal" | "normal";
@@ -58,9 +60,32 @@ export type {
   Statement,
 } from "./generated/diagnostic-result";
 
-/** Downsampled chart series stored with each analysis (ADR 0009). Times are epoch milliseconds. */
+/** One hourly column in chart series v2 (ADR 0026). */
+export interface HourlyColumn {
+  label: string;
+  unit: string;
+  kind: "signal" | "residual" | "physics" | "rule";
+  values: (number | null)[];
+  normal_low?: number | null;
+  normal_high?: number | null;
+}
+
+/** The aligned hourly table in chart series v2: what every sensor did and what the workflow decided. */
+export interface HourlyTable {
+  t: number[];
+  mode: (string | null)[];
+  steady_minutes: number[];
+  diagnosable: boolean[];
+  alarm: boolean[];
+  answer: string[];
+  confidence: (number | null)[];
+  columns: Record<string, HourlyColumn>;
+}
+
+/** Chart series stored with each analysis (ADR 0009, 0026). Times are epoch milliseconds. */
 export interface ChartSeries {
   version: number;
+  hourly?: HourlyTable;
   overview: Record<string, { label: string; unit: string; t: number[]; v: number[] }>;
   events: Record<
     string,

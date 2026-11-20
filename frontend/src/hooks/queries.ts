@@ -18,6 +18,8 @@ export const keys = {
   summary: (filters: object) => ["fault-events", "summary", filters] as const,
   library: (q: string, equipment: string) => ["fault-library", q, equipment] as const,
   libraryEntry: (id: string) => ["fault-library", "entry", id] as const,
+  types: ["equipment-types"] as const,
+  daily: (filters: object) => ["fault-events", "daily", filters] as const,
 };
 
 const TERMINAL = new Set(["succeeded", "failed"]);
@@ -133,4 +135,16 @@ export function useReview(analysisId: string) {
       qc.invalidateQueries({ queryKey: keys.analysis(analysisId) });
     },
   });
+}
+
+export const useEquipmentTypes = () =>
+  useQuery({ queryKey: keys.types, queryFn: api.listEquipmentTypes, staleTime: Infinity });
+
+export const useDailyFaultHours = (filters: Parameters<typeof api.dailyFaultHours>[0]) =>
+  useQuery({ queryKey: keys.daily(filters ?? {}), queryFn: () => api.dailyFaultHours(filters), placeholderData: keepPreviousData });
+
+/** Fault id -> library entry, for plain names, components and symptoms. */
+export function useLibraryIndex() {
+  const { data } = useLibrary();
+  return new Map((data?.items ?? []).map((f) => [f.id, f]));
 }

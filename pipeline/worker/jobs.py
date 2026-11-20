@@ -24,7 +24,7 @@ import faultiq
 from faultiq.explain.check import ExplanationError
 from faultiq.explain.models import FORMATS, ModelError, ModelStore
 from faultiq.explain.series import build_series
-from faultiq.explain.workflow import explain
+from faultiq.explain.workflow import analyse_file
 from faultiq.ingestion.mapping import bundled_mapping
 from faultiq.pipeline import process_file
 from worker import db
@@ -96,7 +96,7 @@ def analyse(job: db.Job, settings: WorkerSettings, store: ModelStore) -> Outcome
 
     with tracer.start_as_current_span("detect_diagnose_explain"):
         try:
-            result = explain(minutes, model.diagnoser, job.original_name)
+            result, hours = analyse_file(minutes, model.diagnoser, job.original_name)
         except ExplanationError as exc:
             log.error("explanation_rejected", extra={"job": str(job.id), "reason": str(exc)})
             raise JobError(
@@ -104,7 +104,8 @@ def analyse(job: db.Job, settings: WorkerSettings, store: ModelStore) -> Outcome
                 "The explanation failed its evidence checks, so no result was published.",
             ) from exc
     with tracer.start_as_current_span("chart_series"):
-        series = build_series(minutes, result, model.diagnoser.models)
+        diag = model.diagnoser
+        series = build_series(minutes, result, diag.models, hours, diag.ranges)
     return Outcome(
         db.as_json(result.model_dump(mode="json")), db.as_json(series), model.model_version
     )
