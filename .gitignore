@@ -76,3 +76,6 @@ web/staticfiles/
 *.bin
 *.safetensors
 *.pt
+
+# --- Local editor and assistant tooling ---
+.claude/
