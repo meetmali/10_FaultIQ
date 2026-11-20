@@ -172,13 +172,11 @@ function Results({
       </p>
 
       {series?.hourly ? (
-        <div className="grid gap-6 xl:grid-cols-5">
-          <div className="xl:col-span-3">
-            <SchematicScrubber key={selected?.id} hourly={series.hourly} result={result} selected={selected} library={library} />
-          </div>
-          <div className="xl:col-span-2">
-            {selected && <SignatureCheck event={selected} hourly={series.hourly} library={library} />}
-          </div>
+        // The schematic gets the full width so every sensor tag stays readable; the signature
+        // check follows directly below it.
+        <div className="space-y-6">
+          <SchematicScrubber key={selected?.id} hourly={series.hourly} result={result} selected={selected} library={library} />
+          {selected && <SignatureCheck event={selected} hourly={series.hourly} library={library} />}
         </div>
       ) : (
         series && (
