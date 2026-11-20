@@ -20,9 +20,9 @@
   </nav>
   {% endwith %}
   <div class="tools">
-    <button class="btn ghost sm" type="button" id="theme" aria-label="Switch light or dark theme">◐ Theme</button>
+    <button class="btn ghost sm" type="button" id="theme" aria-label="Switch light or dark theme">◐<span class="hide-sm"> Theme</span></button>
     {% if user.is_authenticated %}
-      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn ghost sm">Log out {{ user.username }}</button></form>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn ghost sm">Log out<span class="hide-sm"> {{ user.username }}</span></button></form>
     {% else %}
       <a class="btn ghost sm" href="{% url 'login' %}">Log in</a><a class="btn sm" href="{% url 'signup' %}">Sign up</a>
     {% endif %}
