@@ -79,3 +79,6 @@ web/staticfiles/
 
 # --- Local editor and assistant tooling ---
 .claude/
+
+# --- Poster build output (holds personal contact details) ---
+docs/poster/out/
