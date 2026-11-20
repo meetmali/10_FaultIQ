@@ -42,7 +42,7 @@ jobs:
       - run: dotnet test --no-build -c Release
       # The SQL script reviewers and the worker's contract test use must match the migrations.
       - run: dotnet tool restore
-      - run: dotnet ef migrations script --idempotent --no-build -c Release --project src/FaultIQ.Api -o /tmp/schema.sql
+      - run: dotnet ef migrations script --idempotent --no-build --configuration Release --project src/FaultIQ.Api -o /tmp/schema.sql
       - run: diff migrations/schema.sql /tmp/schema.sql
 
   pipeline:
@@ -65,15 +65,28 @@ jobs:
         working-directory: pipeline
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
-        with:
-          version: "0.13.7"
+      - run: pipx install uv==0.13.7
       - run: uv python install 3.13
       - run: uv sync --frozen
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy
       - run: uv run pytest
+
+  web:
+    # INFO 490 Project 2 Django app. Tests run in TF-IDF mode, so PyTorch is not installed.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt
+      - run: python manage.py check
+      - run: python manage.py test diagnostics
 
   frontend:
     runs-on: ubuntu-latest
