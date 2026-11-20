@@ -1,10 +1,10 @@
 /* FaultIQ design tokens, ported from the React UI (frontend/src/index.css). Light and dark sets. */
-:root{--canvas:#f6f6f7;--surface:#fff;--raised:#f0eff2;--line:#e4e4e7;--ink:#18181b;--ink-2:#3f3f46;--muted:#6b6b76;--accent:#6d28d9;--accent-ink:#fff;--accent-soft:#ede9fe;
---fault:#b91c1c;--fault-soft:#fef2f2;--fault-line:#fecaca;--fault-glow:#ef4444;--warn:#92400e;--warn-soft:#fffbeb;--warn-line:#fde68a;--warn-glow:#f59e0b;--ok:#047857;--ok-soft:#ecfdf5;--ok-line:#a7f3d0;--idle:#52525b;--idle-soft:#f4f4f5;--idle-line:#d4d4d8;
---metal-1:#ececee;--metal-2:#d6d6da;--metal-3:#b4b4bb;--metal-edge:#7c7c86;--roof:#e0e0e4;--air-cool:#38bdf8;--air-warm:#fb923c;--refrigerant:#a78bfa;color-scheme:light}
-:root[data-theme="dark"]{--canvas:#0e0e10;--surface:#17171a;--raised:#212125;--line:#2e2e34;--ink:#f4f4f5;--ink-2:#d4d4d8;--muted:#a1a1aa;--accent:#a78bfa;--accent-ink:#17102e;--accent-soft:#2a2144;
---fault:#fca5a5;--fault-soft:#2a1316;--fault-line:#5c2026;--fault-glow:#f87171;--warn:#fcd34d;--warn-soft:#2a2110;--warn-line:#5b4614;--warn-glow:#fbbf24;--ok:#6ee7b7;--ok-soft:#0d2620;--ok-line:#165442;--idle:#a1a1aa;--idle-soft:#1f1f23;--idle-line:#34343a;
---metal-1:#34343a;--metal-2:#2b2b31;--metal-3:#232328;--metal-edge:#5c5c66;--roof:#1c1c20;color-scheme:dark}
+:root{--canvas:#f5f7fa;--surface:#fff;--raised:#eef2f7;--line:#dde3ec;--ink:#0f172a;--ink-2:#334155;--muted:#5b6b80;--accent:#6d28d9;--accent-ink:#fff;--accent-soft:#ede9fe;
+--fault:#b91c1c;--fault-soft:#fef2f2;--fault-line:#fecaca;--fault-glow:#ef4444;--warn:#92400e;--warn-soft:#fffbeb;--warn-line:#fde68a;--warn-glow:#f59e0b;--ok:#047857;--ok-soft:#ecfdf5;--ok-line:#a7f3d0;--idle:#475569;--idle-soft:#f1f5f9;--idle-line:#cbd5e1;
+--metal-1:#e7ecf2;--metal-2:#cfd8e3;--metal-3:#aab7c7;--metal-edge:#7b8aa0;--roof:#d9dee6;--air-cool:#38bdf8;--air-warm:#fb923c;--refrigerant:#a78bfa;color-scheme:light}
+:root[data-theme="dark"]{--canvas:#0a101c;--surface:#111a2b;--raised:#182437;--line:#26344c;--ink:#e8eef7;--ink-2:#c5d0df;--muted:#94a5bb;--accent:#a78bfa;--accent-ink:#17102e;--accent-soft:#2a2144;
+--fault:#fca5a5;--fault-soft:#2a1316;--fault-line:#5c2026;--fault-glow:#f87171;--warn:#fcd34d;--warn-soft:#2a2110;--warn-line:#5b4614;--warn-glow:#fbbf24;--ok:#6ee7b7;--ok-soft:#0d2620;--ok-line:#165442;--idle:#a6b4c7;--idle-soft:#1a2434;--idle-line:#2e3d54;
+--metal-1:#2a3850;--metal-2:#22304a;--metal-3:#1a263b;--metal-edge:#4b5d7a;--roof:#172235;color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 a{color:var(--accent)}a:hover{text-decoration:underline}
