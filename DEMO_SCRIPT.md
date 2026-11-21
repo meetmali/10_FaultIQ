@@ -76,10 +76,10 @@ Show slide 4 for two seconds ("Input → Processing → Output"), then switch to
 ## 4. Technical implementation (2:50 to 3:30) · Slide 5 (architecture), Slide 6 (AI)
 
 **Slide 5:**
-> Under the hood it's one Django 5.2 app deployed on Render with PostgreSQL. Django handles the models,
-> forms with validation, login so each user only sees their own units, a JSON API and CSV export. The AI runs
-> in the same process, so there's no separate AI server and no external API key; building data never leaves
-> the server.
+> Under the hood it's one Django 5.2 app on Render with PostgreSQL. Django handles the models, validated
+> forms, login so each user sees only their own units, a JSON API and CSV export. The AI runs inside the same
+> app: a scikit-learn Isolation Forest detects the faults, and the assistant uses BAAI's open-source bge-small
+> embedding model blended with TF-IDF. No external API key, and building data never leaves the server.
 
 **Slide 6:**
 > Two AI pieces. Detection is a scikit-learn Isolation Forest plus five physics rules. The assistant blends
