@@ -14,7 +14,6 @@ https://faultiq-web.onrender.com
    An older account with no samples: click **Load the sample portfolio** at the bottom of the Overview.
 3. Open the **AI assistant** page once and ask any question, so the first real answer is fast.
 4. Keep two tabs ready: the slide deck and the app on **Overview**. Browser zoom 110 to 125% so text is readable.
-5. Have `web/sample_data/rtu_faulty.csv` handy (it is in the repo) for the optional upload.
 
 Speak at about 150 words a minute. Each section below is sized to its time.
 
@@ -52,25 +51,24 @@ Show slide 4 for two seconds, then switch to the app tab. Each feature below has
 > which faults take up the most hours. Each card shows a unit with its faulty part highlighted in red, so you
 > can see at a glance where the problem is. Units marked **Check** look unusual and are worth a closer look.
 
-### Feature 2: Finding faults in new data (1:20 to 2:10)
+### Feature 2: Looking inside one unit (1:20 to 2:10)
 
-**Do:**
-1. Click the **RTU-4** card.
-2. Scroll down to **Analyse your own export**.
-3. Click **Choose file** and pick `rtu_faulty.csv` (in the repo under `web/sample_data/`).
-4. Click **Upload and analyse**.
+No upload needed: this unit's data is already loaded and analysed.
 
-**Say** (while it uploads):
-> Now let's see how FaultIQ finds faults. I'm uploading this unit's sensor data as a CSV file, the kind of
-> file a building system already exports. FaultIQ checks the file, its AI model looks at every hour the unit
-> was running to spot unusual behaviour, and simple engineering rules then name the fault.
-
-**Do:** the results page opens by itself.
+**Do:** click the **RTU-6** card.
 
 **Say:**
-> Here's the result. It analysed almost 300 hours of data in under a second. The chart shows the supply air
-> temperature against its target, and the red line shows how unusual each hour looks. Below, FaultIQ found
-> four faults, the same four we hid in this test file.
+> Let's open one unit. RTU-6's sensor data came in as a CSV file, the kind of file a building system already
+> exports. FaultIQ checked the file, its AI model looked at every hour the unit was running to spot unusual
+> behaviour, and simple engineering rules then named the fault. The drawing shows exactly which part is
+> affected.
+
+**Do:** click **Charts and details →** (next to "Fault events in the latest analysis").
+
+**Say:**
+> Here's the full result. It analysed almost 300 hours of data in under a second. The chart shows the supply
+> air temperature against its target, and the red line shows how unusual each hour looks. Below, FaultIQ
+> found four different faults, the same four we hid in this test data.
 
 **Do:** click **Insufficient cooling capacity** in the list.
 
@@ -128,7 +126,7 @@ always say what the screen shows.)
 | Problem | What to do |
 |---|---|
 | The site is asleep (spinner) | Keep talking over slide 4; it wakes within a minute. Next time, open it beforehand. |
-| The upload is slow or fails | Skip it: open the existing analysis from the unit page (**Charts and details →**). Same output. |
+| A page is slow | Keep talking; pages load within a few seconds once the site is awake. |
 | The assistant is slow | The first question after a restart loads the model; the hosted site uses TF-IDF mode, so it is fast. |
 | Over time | Drop the optional review step and shorten feature 1. |
 
