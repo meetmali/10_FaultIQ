@@ -39,45 +39,62 @@ Speak at about 150 words a minute. Each section below is sized to its time.
 
 ## 3. Product demonstration (0:50 to 2:50) · Slide 4, then the live app
 
-Show slide 4 for two seconds ("Input → Processing → Output"), then switch to the app.
+Show slide 4 for two seconds, then switch to the app tab. Each feature below has **Do** (what to click) and
+**Say** (what to say while you do it).
 
-**Feature 1: the Overview (0:50 to 1:20)**
-- Show the **Overview** page.
-> This is the portfolio overview: seven rooftop units on two sites, already analysed. Four have a named
-> fault, and 32 events are waiting for a technician. The chart ranks fault hours by type; insufficient
-> cooling capacity is the biggest. Each card highlights the faulty part: the refrigerant circuit on RTU-6
-> and RTU-1, the mixed-air sensor on RTU-4, and the outdoor-air damper on RTU-2. RTU-3 and RTU-5 say
-> **Check**: something unusual that no rule explains, worth a look but not a named fault.
+### Feature 1: The home page (0:50 to 1:20)
 
-(These numbers match the `meetmali` account. On a fresh account or `demo` there are six units and the ring
-reads 2/6; say what the screen shows.)
+**Do:** click **Overview** in the top menu.
 
-**Feature 2: the complete flow, input → processing → output (1:20 to 2:10)**
-- Click **RTU-4** (or any unit) and scroll to **Analyse your own export**.
-- Choose `rtu_faulty.csv` and click **Upload and analyse**.
-> Here is the full flow. The input is a CSV exported from the building automation system: temperatures,
-> damper position and cooling command. When I upload it, Django validates the file, resamples it to hourly
-> data, and an Isolation Forest scores every running hour. Physics rules then name what's wrong.
-- The analysis page opens (it takes under a second).
-> And the output, at the top of the page: 294 running hours analysed in well under a second (read the
-> milliseconds shown next to the date). The chart shows supply air against
-> its setpoint, with the anomaly score in red. Below are the fault events: economizer not economizing, excess
-> outdoor air, low cooling capacity and a mixed-air sensor fault. These are exactly the four faults hidden
-> in this test file.
-- Click **Insufficient cooling capacity**.
-> Each event explains itself: what it means, what to check first, and a review form for the technician.
+**Say:**
+> This is the home page of FaultIQ, and it gives an overview of all the faulty equipment in the building's
+> HVAC system. Here we have seven rooftop units, and four of them have a fault. The chart on the right shows
+> which faults take up the most hours. Each card shows a unit with its faulty part highlighted in red, so you
+> can see at a glance where the problem is. Units marked **Check** look unusual and are worth a closer look.
 
-**Feature 3: the AI assistant (2:10 to 2:50)**
-- On the same event page, type in **Ask the AI assistant**:
-  `Supply air stays warm even though the compressor runs at 100% on hot afternoons`, then click
-  **Rank likely causes**.
-> A technician can also describe what they see in plain words. The assistant searches the fault library and
-> this team's confirmed past cases. On this free host it runs its lightweight keyword mode; on a bigger
-> server it blends in an open-source embedding model. Top match:
-> insufficient cooling capacity, with what to check, and a similar case a technician already confirmed:
-> a refrigerant leak. If the description doesn't match anything it knows, it says it isn't confident
-> instead of guessing.
-- Optional if time allows: go back to the event, set **Review** to *Confirmed*, add a note, save.
+### Feature 2: Finding faults in new data (1:20 to 2:10)
+
+**Do:**
+1. Click the **RTU-4** card.
+2. Scroll down to **Analyse your own export**.
+3. Click **Choose file** and pick `rtu_faulty.csv` (in the repo under `web/sample_data/`).
+4. Click **Upload and analyse**.
+
+**Say** (while it uploads):
+> Now let's see how FaultIQ finds faults. I'm uploading this unit's sensor data as a CSV file, the kind of
+> file a building system already exports. FaultIQ checks the file, its AI model looks at every hour the unit
+> was running to spot unusual behaviour, and simple engineering rules then name the fault.
+
+**Do:** the results page opens by itself.
+
+**Say:**
+> Here's the result. It analysed almost 300 hours of data in under a second. The chart shows the supply air
+> temperature against its target, and the red line shows how unusual each hour looks. Below, FaultIQ found
+> four faults, the same four we hid in this test file.
+
+**Do:** click **Insufficient cooling capacity** in the list.
+
+**Say:**
+> When I open one, it explains what the fault means and what the technician should check first.
+
+### Feature 3: Asking the AI assistant (2:10 to 2:50)
+
+**Do:**
+1. On the same page, find the box **Ask the AI assistant**.
+2. Type: `Supply air stays warm even though the compressor runs at 100% on hot afternoons`
+3. Click **Rank likely causes**.
+
+**Say:**
+> Technicians can also describe a problem in their own words. I'll type what I'd see on site: the supply air
+> stays warm even though the compressor is running at full power. The AI assistant compares this with our
+> fault library and with past cases a technician already confirmed. Its top answer is insufficient cooling
+> capacity, and it tells me exactly what to check. If it isn't sure, it says so instead of guessing.
+
+**Optional, if you have time:** go back to the fault, set **Review status** to *Confirmed*, type a short note
+and click **Save review**.
+
+(The numbers above match the `meetmali` account with seven units. On a fresh account or `demo` there are six;
+always say what the screen shows.)
 
 ## 4. Technical implementation (2:50 to 3:30) · Slide 5 (architecture), Slide 6 (AI)
 
