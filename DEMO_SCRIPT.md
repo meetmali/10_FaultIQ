@@ -21,9 +21,9 @@ Speak at about 150 words a minute. Each section below is sized to its time.
 
 ## 1. Product introduction (0:00 to 0:20) · Slide 1
 
-> Hi, I'm Meet. This is **FaultIQ**, an AI tool that finds and explains faults in rooftop HVAC units,
-> the units that cool most small and mid-size commercial buildings. It's built for facility managers and the
-> HVAC technicians who service their equipment.
+> Hi, I'm Meet, and this is my Project 2, **FaultIQ**. It's an AI web app that works like a second pair of
+> eyes for facility managers. It reads the sensor data from rooftop HVAC units, the ones that cool most
+> offices and stores, finds what's broken, and tells the technician what to fix first.
 
 ## 2. Problem and solution (0:20 to 0:50) · Slides 2 and 3
 
