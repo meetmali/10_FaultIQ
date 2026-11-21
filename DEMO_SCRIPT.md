@@ -22,20 +22,20 @@ Speak at about 150 words a minute. Each section below is sized to its time.
 ## 1. Product introduction (0:00 to 0:20) · Slide 1
 
 > Hi, I'm Meet, and this is my Project 2, **FaultIQ**, an AI fault detection and diagnostics tool for rooftop
-> HVAC units. A **fault** is a part that stops working properly, like a stuck air damper, while the unit keeps
-> running and wasting energy. FaultIQ reads each unit's sensor data, finds the fault, and tells the technician
-> what to fix first.
+> HVAC units. A **fault** is any part that stops doing its job while the unit keeps running. FaultIQ is built
+> for facility managers and the technicians who fix these units.
 
 ## 2. Problem and solution (0:20 to 0:50) · Slides 2 and 3
 
-**Slide 2, the problem:**
-> Rooftop units fail quietly. A damper sticks, refrigerant leaks, a sensor drifts, and the unit keeps running,
-> wasting energy for weeks until someone complains. The data to catch it is already in the building automation
-> logs, but small teams don't have time to read them, and enterprise fault-detection software is expensive.
+**Slide 2, the problem (0:20 to 0:35), pointing at the three cards:**
+> Faults like these three are easy to miss. The unit still runs, so nobody notices, but it wastes energy for
+> weeks. The trend logs already show the problem, yet small teams have no time to read them, and commercial
+> tools are expensive.
 
-**Slide 3, the solution:**
-> FaultIQ reads that trend data, flags abnormal hours with machine learning, names the likely fault with
-> physics rules, and gives the technician an AI assistant that ranks causes and what to check first.
+**Slide 3, the solution (0:35 to 0:50), left to right across the four steps:**
+> FaultIQ reads those logs for you. You upload the CSV the building already exports, machine learning flags
+> the unusual hours, physics rules and an AI assistant name the fault, and the technician confirms the fix.
+> Let me show you.
 
 ## 3. Product demonstration (0:50 to 2:50) · Slide 4, then the live app
 
