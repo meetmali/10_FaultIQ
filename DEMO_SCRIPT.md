@@ -43,9 +43,14 @@ Show slide 4 for two seconds ("Input → Processing → Output"), then switch to
 
 **Feature 1: the Overview (0:50 to 1:20)**
 - Show the **Overview** page.
-> This is the portfolio overview. Six rooftop units on two sites, and their trend data has already been
-> analysed. The ring says two of six have no named fault; four have one. Each card shows the unit with the
-> faulty part highlighted, here the refrigerant circuit and the outdoor-air damper.
+> This is the portfolio overview: seven rooftop units on two sites, already analysed. Four have a named
+> fault, and 32 events are waiting for a technician. The chart ranks fault hours by type; insufficient
+> cooling capacity is the biggest. Each card highlights the faulty part: the refrigerant circuit on RTU-6
+> and RTU-1, the mixed-air sensor on RTU-4, and the outdoor-air damper on RTU-2. RTU-3 and RTU-5 say
+> **Check**: something unusual that no rule explains, worth a look but not a named fault.
+
+(These numbers match the `meetmali` account. On a fresh account or `demo` there are six units and the ring
+reads 2/6; say what the screen shows.)
 
 **Feature 2: the complete flow, input → processing → output (1:20 to 2:10)**
 - Click **RTU-4** (or any unit) and scroll to **Analyse your own export**.
@@ -54,7 +59,8 @@ Show slide 4 for two seconds ("Input → Processing → Output"), then switch to
 > damper position and cooling command. When I upload it, Django validates the file, resamples it to hourly
 > data, and an Isolation Forest scores every running hour. Physics rules then name what's wrong.
 - The analysis page opens (it takes under a second).
-> And the output: 294 running hours analysed in about 150 milliseconds. The chart shows supply air against
+> And the output, at the top of the page: 294 running hours analysed in well under a second (read the
+> milliseconds shown next to the date). The chart shows supply air against
 > its setpoint, with the anomaly score in red. Below are the fault events: economizer not economizing, excess
 > outdoor air, low cooling capacity and a mixed-air sensor fault. These are exactly the four faults hidden
 > in this test file.
