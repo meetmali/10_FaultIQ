@@ -50,7 +50,9 @@ there is no confident match → saved as `AssistantQuery` (text, results, backen
   judgement. Low-similarity queries are flagged instead of presented as answers.
 - Model load or inference failure falls back to TF-IDF automatically, so the assistant keeps working.
 - The technician review (confirm or reject with notes) is the human check on every AI output; confirmed notes
-  become retrieval data for future queries.
+  become retrieval data for future queries. Closing a work order with repair notes confirms its fault the same way.
+- Technicians rate each assistant answer Yes or No. The AI quality page (`/quality/`) shows live detector
+  precision (confirmed ÷ reviewed) and the share of answers rated right, next to the offline benchmark.
 
 ## Known limitations
 
@@ -60,6 +62,8 @@ there is no confident match → saved as `AssistantQuery` (text, results, backen
 - Cold start: the first assistant query after a restart takes about 10 s while the model loads
   (`AI_WARMUP=1` loads it in the background at startup).
 - The labelled assistant set is small (10 descriptions).
+- The energy cost and suggested work-order priority come from a transparent formula with assumed waste factors,
+  not from a trained model or metered data; the AI quality page lists the assumptions.
 
 ## Safety and privacy
 

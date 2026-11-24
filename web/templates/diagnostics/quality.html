@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block title %}AI quality{% endblock %}
+{% block content %}
+<h1>AI quality</h1>
+<p class="muted">How well the AI is doing. The live figures come from your own technician reviews and assistant feedback; the benchmark comes from the labelled test set (<code>python manage.py evaluate</code>).</p>
+<div class="stats">
+  <div class="stat"><b>{% if precision is not None %}{{ precision }}%{% else %}-{% endif %}</b><span>Detector precision ({{ confirmed }} confirmed, {{ rejected }} rejected)</span></div>
+  <div class="stat"><b>{% if a.helpful_rate is not None %}{{ a.helpful_rate }}%{% else %}-{% endif %}</b><span>Assistant answers rated right ({{ a.helpful }} of {{ a.rated }})</span></div>
+  <div class="stat"><b>{% if a.confident_rate is not None %}{{ a.confident_rate }}%{% else %}-{% endif %}</b><span>Assistant answers above the confidence gate ({{ a.n }} question{{ a.n|pluralize }})</span></div>
+  <div class="stat"><b>{% if a.avg_ms is not None %}{{ a.avg_ms|floatformat:0 }} ms{% else %}-{% endif %}</b><span>Mean assistant latency · {{ backend }}</span></div>
+</div>
+<div class="grid g2">
+  <div class="card"><h2>Detection, checked by technicians</h2>
+    <div class="table-wrap"><table><thead><tr><th>Fault</th><th>Events</th><th>Confirmed</th><th>Rejected</th><th>Precision</th></tr></thead><tbody>
+    {% for r in rows %}<tr><td>{{ r.fault_type__name|default:"Unclassified anomaly" }}</td><td>{{ r.total }}</td><td>{{ r.confirmed }}</td><td>{{ r.rejected }}</td><td>{% if r.precision is not None %}{{ r.precision }}%{% else %}<small>not reviewed</small>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">No fault events yet.</td></tr>{% endfor %}</tbody></table></div>
+    <small>Precision = confirmed ÷ (confirmed + rejected). Review a fault, or close its work order, to add to it.</small>
+  </div>
+  <div class="card"><h2>Benchmark on labelled data</h2>
+    <table><thead><tr><th>Detection</th><th>Result</th></tr></thead><tbody>{% for k,v in benchmark.detection %}<tr><td>{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</tbody></table>
+    <table style="margin-top:12px"><thead><tr><th>Assistant, 10 descriptions</th><th>Top-1</th><th>Top-3</th></tr></thead><tbody>{% for k,t1,t3 in benchmark.assistant %}<tr><td>{{ k }}</td><td>{{ t1 }}</td><td>{{ t3 }}</td></tr>{% endfor %}</tbody></table>
+  </div>
+</div>
+<div class="card" id="energy"><h2>How the energy cost is estimated</h2>
+  <p>Wasted kWh = fault hours × unit tons × {{ kw_per_ton }} kW per ton × the waste factor for that fault. Cost uses ${{ price }} per kWh. "If left unfixed" assumes {{ hours_per_month }} running hours a month. These are engineering estimates to rank repairs, not metered savings.</p>
+  <div class="table-wrap"><table><thead><tr><th>Fault code</th><th>Share of input power wasted</th></tr></thead><tbody>
+  {% for code, f in factors %}<tr><td><a href="{% url 'fault_detail' code %}">{{ code }}</a></td><td>{% widthratio f 1 100 %}%{% if not f %} <small>(comfort risk instead: urgent)</small>{% endif %}</td></tr>{% endfor %}
+  <tr><td>Unclassified anomaly</td><td>10%</td></tr></tbody></table></div>
+</div>
+{% endblock %}

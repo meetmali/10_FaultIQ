@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "diagnostics",
 ]
 
@@ -89,6 +90,8 @@ AI_EMBEDDINGS = os.environ.get("AI_EMBEDDINGS", "hybrid")
 AI_WARMUP = os.environ.get("AI_WARMUP", "0") == "1"
 AI_EMBEDDING_MODEL = os.environ.get("AI_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
 ASSISTANT_HOURLY_LIMIT = int(os.environ.get("ASSISTANT_HOURLY_LIMIT", "30"))
+# Electricity price for the energy cost estimates (USD per kWh, roughly the US commercial average).
+ENERGY_PRICE_PER_KWH = float(os.environ.get("ENERGY_PRICE_PER_KWH", "0.13"))
 
 if not DEBUG:
     SESSION_COOKIE_SECURE = True

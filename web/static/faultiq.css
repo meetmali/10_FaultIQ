@@ -41,7 +41,7 @@ th{text-align:left;color:var(--muted);font-weight:500;font-size:.82rem;padding:8
 td{padding:9px 10px;border-bottom:1px solid var(--line)}tr:last-child td{border-bottom:0}
 .table-wrap{overflow-x:auto}
 form p{margin:0 0 12px}label{display:block;font-weight:500;margin-bottom:4px;font-size:.9rem}
-input[type=text],input[type=password],input[type=number],input[type=search],input[type=file],select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--canvas);color:var(--ink);font:inherit}
+input[type=text],input[type=password],input[type=number],input[type=search],input[type=file],input[type=date],select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--canvas);color:var(--ink);font:inherit}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .helptext{display:block;color:var(--muted);font-size:.82rem;margin-top:3px}
 ul.errorlist{list-style:none;margin:4px 0;padding:0;color:var(--fault);font-size:.88rem}
@@ -64,3 +64,7 @@ ul.errorlist{list-style:none;margin:4px 0;padding:0;color:var(--fault);font-size
 @media (prefers-reduced-motion:reduce){.fq-spin,.fq-flow,.fq-pulse{animation:none!important}}
 .btn{white-space:nowrap}
 @media(max-width:600px){.hide-sm{display:none}.hero{flex-direction:column;align-items:flex-start}.hero .ring{width:120px;flex-basis:auto}h1{font-size:1.3rem}.tools{gap:6px}.tools .btn{padding:4px 8px}header.top .wrap{gap:10px}.brand{font-size:.95rem}}
+.p-urgent,.p-high{color:var(--fault);background:var(--fault-soft);border-color:var(--fault-line)}.p-medium,.w-in_progress{color:var(--warn);background:var(--warn-soft);border-color:var(--warn-line)}
+.p-low,.w-open{color:var(--idle);background:var(--idle-soft);border-color:var(--idle-line)}.w-done{color:var(--ok);background:var(--ok-soft);border-color:var(--ok-line)}
+.cost{font-variant-numeric:tabular-nums}.overdue{color:var(--fault);font-weight:600}
+.feedback{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.feedback form{display:inline}

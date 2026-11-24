@@ -15,6 +15,7 @@ using the fault library and the team's confirmed past cases.
 
 - Startup scope, features, evaluation, deployment and cost analysis: [docs/P2_REPORT.md](docs/P2_REPORT.md)
 - AI documentation: [README_AI.md](README_AI.md)
+- 3-minute product video script (final submission): [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md)
 - 4-minute presentation and demo script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
 - The Django app lives in [web/](web/). The rest of the repository is the larger FaultIQ platform
   (.NET API, Python research pipeline, React UI), described in [docs/platform-README.md](docs/platform-README.md).
@@ -36,8 +37,17 @@ fault library and the user's confirmed cases. The AI is open source, runs on the
    TF-IDF) over the fault library and the user's confirmed cases, with a confidence gate.
 3. **Review workflow and portfolio dashboard.** Confirm or reject events with notes (confirmed notes feed the
    assistant), dashboard with fault-hour chart, filters, CSV export and a JSON API.
-4. **Sites and units management** (create, edit, delete) and a searchable fault library.
-5. **Operator-style interface** ported from the earlier FaultIQ React UI: the same design tokens, light and dark
+4. **Work orders.** Turn any fault into a repair job with a priority suggested from its estimated energy cost
+   and the detector's confidence, an assignee and a due date. Closing a work order requires repair notes,
+   confirms the fault, and makes the repair a past case the AI assistant can match. Tracks open, in-progress and
+   done jobs, overdue dates and mean time to repair.
+5. **Energy cost estimate.** Every fault shows the kWh and dollars wasted so far and the monthly cost if left
+   unfixed (tons × kW per ton × a per-fault waste factor, explained on the AI quality page). The Overview totals
+   it across the fleet so a manager can see what to fix first.
+6. **AI quality page.** Live detector precision from technician confirm/reject decisions, assistant accuracy
+   from Yes/No feedback on each answer, confidence-gate rate and latency, next to the offline benchmark.
+7. **Sites and units management** (create, edit, delete) and a searchable fault library.
+8. **Operator-style interface** ported from the earlier FaultIQ React UI: the same design tokens, light and dark
    themes, a fleet health ring, and an animated isometric rooftop unit that highlights the faulty part.
 
 ## Run it locally
@@ -56,27 +66,29 @@ python manage.py runserver
 
 Open http://127.0.0.1:8000 and sign up (or log in as `demo`). **No upload is needed:** every account starts
 with a sample portfolio of 6 rooftop units on 2 sites, generated from synthetic trend data and already analysed
-(4 units with injected faults, 2 without, one fault already confirmed by a technician). You can still upload
+(4 units with injected faults, 2 without, one repair finished, one in progress and one false alarm rejected). You can still upload
 your own export, or `web/sample_data/rtu_faulty.csv`, on any unit page.
 
 **Environment variables** (all optional locally; see [web/.env.example](web/.env.example)): `DJANGO_DEBUG`,
 `DJANGO_SECRET_KEY` (required when `DJANGO_DEBUG=0`), `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL` (default SQLite
 `web/db.sqlite3`; any PostgreSQL URL works), `AI_EMBEDDINGS` (`hybrid`, `bge` or `tfidf`), `AI_WARMUP`,
-`ASSISTANT_HOURLY_LIMIT`. **No API key is needed**: the AI runs locally. The embedding model (about 130 MB)
+`ASSISTANT_HOURLY_LIMIT`, `ENERGY_PRICE_PER_KWH` (default 0.13). **No API key is needed**: the AI runs locally. The embedding model (about 130 MB)
 downloads from Hugging Face on first use; `HF_TOKEN` is optional and only raises download rate limits.
 
 ## Using the AI
 
 - **Detection:** results for the sample units are already on the Overview and unit pages. To run it again, open a unit and upload a CSV. Required columns: `timestamp, oat, rat, mat, sat, sat_sp,
   damper_pct, cooling_pct, fan_on` (temperatures in °C, percentages 0 to 100, fan 0 or 1).
-- **Assistant:** the **AI assistant** page, or **Ask the AI assistant** on any fault event page. JSON:
-  `POST /api/assistant/` with `{"text": "..."}` (logged-in session).
+- **Assistant:** the **AI assistant** page, or **Ask the AI assistant** on any fault event page. Rate the top
+  answer with **Yes** or **No**; the **AI quality** page shows the running accuracy.
+- **JSON API** (logged-in session): `POST /api/assistant/` with `{"text": "..."}`, `GET /api/units/<id>/events/`,
+  `GET /api/summary/`, `GET /api/work-orders/`. `GET /healthz/` is a public uptime check (app and database).
 
 ## Tests and evaluation
 
 ```bash
 cd web
-python manage.py test diagnostics    # 10 tests: workflow, validation, permissions, pages, API, sample data
+python manage.py test diagnostics    # 15 tests: workflow, validation, permissions, work orders, feedback, API, health
 python manage.py evaluate            # the evaluation tables in docs/P2_REPORT.md
 python manage.py make_sample         # regenerate the synthetic sample CSVs
 ```

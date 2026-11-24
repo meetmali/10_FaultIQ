@@ -14,7 +14,9 @@
     {% if user.is_authenticated %}
     <a href="{% url 'dashboard' %}" class="{% if n == 'dashboard' or n == 'unit_detail' %}on{% endif %}">Overview</a>
     <a href="{% url 'event_list' %}" class="{% if n == 'event_list' or n == 'event_detail' %}on{% endif %}">Fault events</a>
+    <a href="{% url 'workorder_list' %}" class="{% if n == 'workorder_list' or n == 'workorder_detail' or n == 'workorder_create' %}on{% endif %}">Work orders</a>
     <a href="{% url 'assistant' %}" class="{% if n == 'assistant' %}on{% endif %}">AI assistant</a>
+    <a href="{% url 'quality' %}" class="{% if n == 'quality' %}on{% endif %}">AI quality</a>
     {% endif %}
     <a href="{% url 'fault_list' %}" class="{% if n == 'fault_list' or n == 'fault_detail' %}on{% endif %}">Fault library</a>
   </nav>

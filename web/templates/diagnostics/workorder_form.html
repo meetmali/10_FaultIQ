@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load faultiq humanize %}{% block title %}{% if order %}{{ order.title }}{% else %}New work order{% endif %}{% endblock %}
+{% block content %}
+<p><a href="{% if order %}{% url 'workorder_list' %}{% else %}{{ event.get_absolute_url }}{% endif %}">← {% if order %}Work orders{% else %}{{ event.label }}{% endif %}</a></p>
+<div class="grid g-hero">
+  <div class="card">
+    <div class="card-head"><h1>{% if order %}{{ order.title }}{% else %}New work order{% endif %}</h1>
+      {% if order %}<span><span class="badge p-{{ order.priority }}">{{ order.get_priority_display }}</span> <span class="badge w-{{ order.status }}">{{ order.get_status_display }}</span></span>{% endif %}</div>
+    {% if not order %}<div class="msg">Suggested priority: <b>{{ suggested|capfirst }}</b>, from the estimated cost and the detector's confidence. You can change it.</div>{% endif %}
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn">{% if order %}Save changes{% else %}Create work order{% endif %}</button></form>
+    {% if order %}<p style="margin-top:12px"><small>Created {{ order.created_at|date:"M j, H:i" }}{% if order.completed_at %} · closed {{ order.completed_at|date:"M j, H:i" }}{% endif %}</small></p>{% endif %}
+  </div>
+  <div class="card">
+    {% rtu "fault" event.fault_type.code event.label "card" %}
+    <h2><a href="{{ event.get_absolute_url }}">{{ event.label }}</a></h2>
+    <p class="muted">{{ event.analysis.unit }} · {{ event.hours }} h · confidence {{ event.confidence|floatformat:2 }}</p>
+    {% if event.fault_type %}<p><b>Check first:</b> {{ event.fault_type.checks }}</p>{% endif %}
+    <h3>Estimated energy impact</h3>
+    {% if est.comfort %}<p>No energy wasted, but occupants get no fresh air while it lasts. Treated as urgent.</p>
+    {% else %}<dl class="kv"><dt>Wasted so far</dt><dd class="cost">{{ est.kwh|intcomma }} kWh, about ${{ est.cost }}</dd><dt>If left unfixed</dt><dd class="cost">about ${{ est.monthly_cost|intcomma }} a month</dd></dl>
+    <small>At ${{ price }} per kWh. <a href="{% url 'quality' %}#energy">How this is estimated</a></small>{% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,7 +1,9 @@
+import datetime
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
-from .models import FaultEvent, Site, Unit
+from .models import FaultEvent, Site, Unit, WorkOrder
 
 MAX_UPLOAD = 5 * 1024 * 1024
 
@@ -79,3 +81,26 @@ class AssistantForm(forms.Form):
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": "e.g. supply air stays warm even with the compressor at 100%"}),
         max_length=1000,
     )
+
+
+class WorkOrderForm(forms.ModelForm):
+    class Meta:
+        model = WorkOrder
+        fields = ["title", "priority", "status", "assignee", "due_date", "notes"]
+        widgets = {
+            "due_date": forms.DateInput(attrs={"type": "date"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "e.g. Found the damper actuator linkage loose, tightened and tested."}),
+        }
+
+    def clean_due_date(self):
+        due = self.cleaned_data.get("due_date")
+        changed = self.instance.pk is None or "due_date" in self.changed_data
+        if due and changed and due < datetime.date.today():
+            raise forms.ValidationError("The due date cannot be in the past.")
+        return due
+
+    def clean(self):
+        data = super().clean()
+        if data.get("status") == WorkOrder.Status.DONE and not (data.get("notes") or "").strip():
+            self.add_error("notes", "Describe what was found and fixed before closing the work order.")
+        return data

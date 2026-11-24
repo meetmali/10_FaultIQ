@@ -120,8 +120,49 @@ class AssistantQuery(models.Model):
     results = models.JSONField(default=dict)
     backend = models.CharField(max_length=40)
     latency_ms = models.PositiveIntegerField()
+    helpful = models.BooleanField(null=True, blank=True, help_text="Technician feedback: was the top answer right?")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
         verbose_name_plural = "assistant queries"
+
+
+class WorkOrder(models.Model):
+    """A repair job for one fault event. Closing it with notes confirms the fault and teaches the assistant."""
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        IN_PROGRESS = "in_progress", "In progress"
+        DONE = "done", "Done"
+
+    class Priority(models.TextChoices):
+        URGENT = "urgent", "Urgent"
+        HIGH = "high", "High"
+        MEDIUM = "medium", "Medium"
+        LOW = "low", "Low"
+
+    event = models.OneToOneField(FaultEvent, on_delete=models.CASCADE, related_name="work_order")
+    title = models.CharField(max_length=160)
+    priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.OPEN)
+    assignee = models.CharField(max_length=120, blank=True, help_text="Technician or contractor.")
+    due_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True, help_text="What was found and fixed. Required to close the work order.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["status", "priority"])]
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("workorder_detail", args=[self.pk])
+
+    @property
+    def unit(self):
+        return self.event.analysis.unit

@@ -1,6 +1,6 @@
 {% extends "base.html" %}{% block title %}AI assistant{% endblock %}
 {% block content %}
-<h1>AI diagnostic assistant</h1>
+<div class="card-head"><h1>AI diagnostic assistant</h1><a href="{% url 'quality' %}"><small>AI quality →</small></a></div>
 <p class="muted">Describe what you see. The assistant ranks fault library entries and your confirmed past cases by meaning, using an open-weight embedding model blended with keyword search.</p>
 <div class="grid g2">
 <div class="card">
@@ -8,7 +8,7 @@
   <form method="post" id="ask">{% csrf_token %}{% if event %}<input type="hidden" name="event" value="{{ event.pk }}">{% endif %}{{ form.as_p }}<button class="btn">Rank likely causes</button></form>
   <p style="margin-top:14px"><small>Try an example:</small></p>
   {% for x in examples %}<button type="button" class="btn ghost sm example" style="margin:0 6px 6px 0;text-align:left;white-space:normal">{{ x }}</button>{% endfor %}
-  {% if history %}<h3 style="margin-top:16px">Recent questions</h3><ul>{% for q in history %}<li><small>{{ q.text|truncatechars:80 }} → {{ q.results.matches.0.name }}</small></li>{% endfor %}</ul>{% endif %}
+  {% if history %}<h3 style="margin-top:16px">Recent questions</h3><ul>{% for q in history %}<li><small>{{ q.text|truncatechars:80 }} → {{ q.results.matches.0.name }}{% if q.helpful is True %} · rated right{% elif q.helpful is False %} · rated wrong{% endif %}</small></li>{% endfor %}</ul>{% endif %}
 </div>
 <div class="card">
   {% if result %}
@@ -16,6 +16,9 @@
     {% if not result.results.confident %}<div class="msg">No confident match. The description may be outside the rooftop-unit faults FaultIQ knows. Treat these as weak suggestions and check the basics: power, schedule, setpoints.</div>{% endif %}
     {% for m in result.results.matches %}<div class="match"><div class="card-head" style="margin:0"><a href="{% url 'fault_detail' m.code %}"><b>{{ forloop.counter }}. {{ m.name }}</b></a><small>similarity {{ m.score }}</small></div><small>{{ m.checks }}</small></div>{% endfor %}
     {% if result.results.similar_cases %}<h3>Similar confirmed cases</h3><ul>{% for c in result.results.similar_cases %}<li><a href="{% url 'event_detail' c.id %}">{{ c.label }}</a> <small>{{ c.score }}</small></li>{% endfor %}</ul>{% endif %}
+    <div class="feedback"><small>Was the top answer right?</small>
+      <form method="post" action="{% url 'assistant_feedback' result.pk %}">{% csrf_token %}<button class="btn ghost sm" name="helpful" value="yes">Yes</button></form>
+      <form method="post" action="{% url 'assistant_feedback' result.pk %}">{% csrf_token %}<button class="btn ghost sm" name="helpful" value="no">No</button></form></div>
     <small>AI suggestions support, not replace, a technician's judgement.</small>
   {% else %}<p class="empty">Results appear here.</p>{% endif %}
 </div>

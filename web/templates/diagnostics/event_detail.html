@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load faultiq %}{% block title %}{{ event.label }}{% endblock %}
+{% extends "base.html" %}{% load faultiq humanize %}{% block title %}{{ event.label }}{% endblock %}
 {% block content %}
 <p><a href="{{ event.analysis.unit.get_absolute_url }}">← {{ event.analysis.unit.name }}</a></p>
 <div class="grid g-hero">
@@ -8,6 +8,11 @@
     <p class="muted">{{ event.analysis.unit }} · {{ event.starts_at|date:"M j, H:i" }} to {{ event.ends_at|date:"M j, H:i" }} · {{ event.hours }} h · confidence {{ event.confidence|floatformat:2 }}</p>
     {% if event.fault_type %}<p>{{ event.fault_type.symptoms }}</p><p><b>Check first:</b> {{ event.fault_type.checks }}</p><a href="{{ event.fault_type.get_absolute_url }}">Library entry →</a>
     {% else %}<p>The anomaly detector found unusual behaviour that no physics rule explains. Describe what you see to the AI assistant.</p>{% endif %}
+    <h3 style="margin-top:14px">Estimated energy impact</h3>
+    {% if est.comfort %}<p>No energy wasted, but occupants get no fresh air while it lasts.</p>
+    {% else %}<p class="cost">{{ est.kwh|intcomma }} kWh wasted so far (about ${{ est.cost }}) · about <b>${{ est.monthly_cost|intcomma }} a month</b> if left unfixed <small>(<a href="{% url 'quality' %}#energy">how</a>)</small></p>{% endif %}
+    {% if work_order %}<p>Work order: <a href="{{ work_order.get_absolute_url }}">{{ work_order.title }}</a> <span class="badge w-{{ work_order.status }}">{{ work_order.get_status_display }}</span></p>
+    {% else %}<a class="btn sm" href="{% url 'workorder_create' event.pk %}">Create work order</a>{% endif %}
   </div>
 </div>
 <div class="grid g2">

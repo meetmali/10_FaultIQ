@@ -6,7 +6,10 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .models import FaultEvent, FaultType, Site, Unit
+import datetime
+
+from . import energy
+from .models import AssistantQuery, FaultEvent, FaultType, Site, Unit, WorkOrder
 
 SAMPLE = Path(settings.BASE_DIR) / "sample_data" / "rtu_faulty.csv"
 
@@ -79,3 +82,62 @@ class WorkflowTests(TestCase):
         self.assertContains(r, "units have a fault")
         self.assertEqual(Unit.objects.filter(site__owner__username="newbie").count(), 6)
         self.assertTrue(FaultEvent.objects.filter(analysis__unit__site__owner__username="newbie", review_status="confirmed").exists())
+        self.assertEqual(WorkOrder.objects.filter(event__analysis__unit__site__owner__username="newbie").count(), 2)
+        self.assertTrue(FaultEvent.objects.filter(analysis__unit__site__owner__username="newbie", review_status="rejected").exists())
+
+    # ---------- final features: energy estimate, work orders, feedback, AI quality, health ----------
+    def event(self, code="low-refrigerant"):
+        self.upload(SAMPLE.read_bytes())
+        return FaultEvent.objects.filter(fault_type__code=code).first()
+
+    def test_energy_estimate_is_transparent_arithmetic(self):
+        self.unit.tonnage = 10
+        self.unit.save()
+        e = self.event("low-refrigerant")
+        est = energy.estimate(e)
+        self.assertEqual(est["kwh"], round(e.hours * 10 * energy.KW_PER_TON * 0.30))
+        self.assertGreater(est["monthly_cost"], 0)
+        self.assertFalse(est["comfort"])
+
+    def test_work_order_prefilled_validated_and_closing_confirms_fault(self):
+        e = self.event("econ-stuck-closed")
+        r = self.client.get(reverse("workorder_create", args=[e.pk]))
+        self.assertContains(r, "Suggested priority")
+        past = (datetime.date.today() - datetime.timedelta(days=2)).isoformat()
+        r = self.client.post(reverse("workorder_create", args=[e.pk]), {"title": "Fix damper", "priority": "high", "status": "open", "due_date": past})
+        self.assertContains(r, "cannot be in the past")
+        self.client.post(reverse("workorder_create", args=[e.pk]), {"title": "Fix damper", "priority": "high", "status": "open"})
+        order = WorkOrder.objects.get(event=e)
+        r = self.client.post(reverse("workorder_detail", args=[order.pk]), {"title": "Fix damper", "priority": "high", "status": "done", "notes": ""})
+        self.assertContains(r, "Describe what was found")
+        self.client.post(reverse("workorder_detail", args=[order.pk]), {"title": "Fix damper", "priority": "high", "status": "done", "notes": "Actuator linkage loose, fixed."})
+        order.refresh_from_db()
+        e.refresh_from_db()
+        self.assertIsNotNone(order.completed_at)
+        self.assertEqual(e.review_status, "confirmed")
+        self.assertEqual(e.technician_notes, "Actuator linkage loose, fixed.")
+        self.assertEqual(self.client.get(reverse("api_work_orders")).json()["work_orders"][0]["status"], "done")
+        self.assertContains(self.client.get(reverse("workorder_list")), "Fix damper")
+
+    def test_work_orders_are_private(self):
+        e = self.event()
+        order = WorkOrder.objects.create(event=e, title="Mine")
+        self.client.login(username="other", password="pw-123456!")
+        self.assertEqual(self.client.get(reverse("workorder_detail", args=[order.pk])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("workorder_create", args=[e.pk])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("api_work_orders")).json()["work_orders"], [])
+
+    def test_assistant_feedback_counts_on_quality_page(self):
+        self.client.post(reverse("assistant"), {"text": "cooling at 100 percent but supply air stays warm"})
+        q = AssistantQuery.objects.get(user=self.user)
+        self.client.post(reverse("assistant_feedback", args=[q.pk]), {"helpful": "yes"})
+        q.refresh_from_db()
+        self.assertTrue(q.helpful)
+        r = self.client.get(reverse("quality"))
+        self.assertContains(r, "100%")
+        self.client.login(username="other", password="pw-123456!")
+        self.assertEqual(self.client.post(reverse("assistant_feedback", args=[q.pk]), {"helpful": "no"}).status_code, 404)
+
+    def test_health_check(self):
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse("healthz")).json()["status"], "ok")

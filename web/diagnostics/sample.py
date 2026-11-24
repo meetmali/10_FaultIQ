@@ -20,8 +20,9 @@ PORTFOLIO = [
 
 # A confirmed case with technician notes, so the assistant can show similar past cases.
 CONFIRMED_NOTE = (
-    "Found low refrigerant charge, about 20% short. Leak at the evaporator coil braze joint, "
-    "repaired, recharged and verified superheat. Supply air back at setpoint."
+    "Supply air stayed warm on hot afternoons with the compressor at 100%. Found the refrigerant charge about "
+    "20% short from a leak at an evaporator coil braze joint. Repaired, recharged and verified superheat. "
+    "Supply air back at setpoint."
 )
 
 
@@ -60,7 +61,7 @@ def generate(days=21, seed=0, faults=()):
 
 def load_sample_portfolio(user):
     """Create the sample sites and units with analyses already run. Safe to call more than once."""
-    from .models import FaultEvent, Site, Unit
+    from .models import FaultEvent, Site, Unit, WorkOrder
     from .services import run_analysis
 
     if Site.objects.filter(owner=user, name="Campus North").exists():
@@ -71,9 +72,39 @@ def load_sample_portfolio(user):
             unit = Unit.objects.create(site=site, name=unit_name, tonnage=tons, notes="Sample unit with synthetic trend data.")
             data = generate(seed=seed, faults=faults).to_csv(index=False).encode()
             run_analysis(unit, SimpleUploadedFile(f"{unit_name.lower()}-june.csv", data, "text/csv"))
-        event = FaultEvent.objects.filter(
-            analysis__unit__site__owner=user, analysis__unit__name="RTU-1", fault_type__code="low-refrigerant"
-        ).first()
-        if event:
-            event.review_status, event.technician_notes = FaultEvent.Review.CONFIRMED, CONFIRMED_NOTE
-            event.save()
+        add_sample_history(user.pk, FaultEvent, WorkOrder)
+
+
+def add_sample_history(user_id, FaultEvent, WorkOrder):
+    """Reviews and work orders on the sample units, so every page has history to show.
+    Takes the model classes so the data migration can pass its historical models."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    mine = FaultEvent.objects.filter(analysis__unit__site__owner_id=user_id)
+    if WorkOrder.objects.filter(event__in=mine).exists():
+        return
+    now = timezone.now()
+    # A confirmed repair with notes: the assistant shows it as a similar past case.
+    event = mine.filter(analysis__unit__name="RTU-1", fault_type__code="low-refrigerant").first()
+    if event:
+        event.review_status, event.technician_notes = "confirmed", CONFIRMED_NOTE
+        event.save()
+        WorkOrder.objects.create(
+            event=event, title="Insufficient cooling capacity on RTU-1", priority="medium", status="done",
+            assignee="Sample technician", notes=CONFIRMED_NOTE, completed_at=now - timedelta(hours=4),
+        )
+        WorkOrder.objects.filter(event=event).update(created_at=now - timedelta(hours=30))
+    # A rejected false alarm, so the AI quality page shows the detector is not perfect.
+    noise = mine.filter(analysis__unit__name__in=["RTU-3", "RTU-5"], fault_type__isnull=True, review_status="unreviewed").first()
+    if noise:
+        noise.review_status, noise.technician_notes = "rejected", "Normal morning start-up. Checked on site, no fault."
+        noise.save()
+    # A repair in progress.
+    sensor = mine.filter(analysis__unit__name="RTU-4", fault_type__code="mat-sensor").first()
+    if sensor:
+        WorkOrder.objects.create(
+            event=sensor, title="Mixed-air temperature sensor fault on RTU-4", priority="low", status="in_progress",
+            assignee="Sample technician", due_date=timezone.localdate() + timedelta(days=7),
+        )

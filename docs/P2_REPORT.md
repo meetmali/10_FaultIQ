@@ -1,4 +1,4 @@
-# FaultIQ: INFO 490 Project 2 report (first draft)
+# FaultIQ: INFO 490 Project 2 report (final)
 
 Individual project. Responsible member for every task: Meet Kailash Mali.
 Repository: https://github.com/meetmali/10_FaultIQ. Live app: https://faultiq-web.onrender.com. App code: `web/`. AI details: [README_AI.md](../README_AI.md).
@@ -18,7 +18,8 @@ Repository: https://github.com/meetmali/10_FaultIQ. Live app: https://faultiq-we
 - **Value proposition:** upload a trend export you already have and get named, ranked faults with what to check,
   plus an assistant that turns a technician's description into likely causes, in minutes and without integration.
 - **Primary features:** (1) trend upload with ML fault detection, (2) AI diagnostic assistant, (3) review
-  workflow with dashboard, export and API. Supporting: sites and units management, searchable fault library.
+  workflow with dashboard, export and API, (4) work orders with energy-cost priority. Supporting: AI quality
+  page, sites and units management, searchable fault library.
 - **Changes from P2-A2:** the startup concept is unchanged. The significant change is architectural: the
   product's web layer is now a Django application (models, ORM, auth, forms, templates, JSON API), which
   hosts the AI directly. The existing FaultIQ research pipeline and .NET/React prototype remain in the
@@ -32,13 +33,15 @@ Repository: https://github.com/meetmali/10_FaultIQ. Live app: https://faultiq-we
 | Upload and detect | Turns a raw trend CSV into fault events with a name, duration, confidence and a chart. |
 | AI diagnostic assistant | Ranks likely faults and checks from free-text symptoms, using the library and the team's confirmed cases. |
 | Review, dashboard, export | Technicians confirm or reject events (notes required to confirm); managers see fault hours by type; CSV export and JSON API. |
+| Work orders with energy cost (final) | Each fault shows the energy and money it wastes; one click turns it into a repair job with a suggested priority, assignee and due date. Closing it with notes confirms the fault and teaches the assistant. |
+| AI quality page (final) | Live detector precision from technician reviews and assistant accuracy from Yes/No feedback, beside the offline benchmark, so users can see how far to trust the AI. |
 
 ### 1.3 User experience
 
 End-to-end workflow: sign up → a sample portfolio of 6 units is created and analysed automatically → Overview
 (health ring, units needing attention, fault hours chart, fleet table) → unit page (animated rooftop unit with
 the faulty part highlighted) → fault event → ask the AI assistant → confirm with notes → Overview and CSV export
-update. Users can also add their own sites and units and upload their own trend export. Navigation bar on every
+update → create a work order from the fault, close it with repair notes → the AI quality page updates. Users can also add their own sites and units and upload their own trend export. Navigation bar on every
 page (template inheritance from `base.html`), one stylesheet with the design tokens of the earlier FaultIQ React
 UI, light and dark themes, success/error messages after every action, inline form errors and empty states.
 
@@ -53,19 +56,24 @@ external AI calls), and is open source and cheap to host.
 ## Part 2: Django application (First-Draft Requirement 2)
 
 - **Models and relationships** (`web/diagnostics/models.py`): `Site` (FK owner User) → `Unit` → `Analysis`
-  → `FaultEvent` (FK `FaultType`); `AssistantQuery` (FK User, optional FK FaultEvent). Unique constraint on site
-  name per owner. Migrations in `web/diagnostics/migrations/`; `0002` seeds the fault library.
-- **CRUD:** create sites; create, edit and delete units; create analyses and events; update events (review).
+  → `FaultEvent` (FK `FaultType`) → `WorkOrder` (one-to-one); `AssistantQuery` (FK User, optional FK FaultEvent,
+  `helpful` feedback). Unique constraint on site name per owner, index on work-order status and priority.
+  Migrations in `web/diagnostics/migrations/`; `0002` seeds the fault library, `0004` backfills sample history.
+- **CRUD:** create sites; create, edit and delete units; create analyses and events; update events (review);
+  create and update work orders.
 - **Views, templates, URLs:** function-based views, `base.html` inheritance, named URLs and
   `get_absolute_url` on models.
 - **Forms and validation:** `SiteForm` (duplicate names), `UnitForm` (tonnage range, own sites only),
   `UploadForm` (extension, size, binary sniff), `ReviewForm` (note required to confirm), `AssistantForm`,
+  `WorkOrderForm` (due date not in the past, repair notes required to close),
   plus CSV content validation in the detector.
 - **Authentication and authorization:** sign up, login, logout; `login_required` on all data views; every query
   scoped to the owner (other users get 404, tested).
-- **JSON API:** `GET /api/units/<id>/events/`, `GET /api/summary/`, `POST /api/assistant/`.
-- **Data features:** dashboard with aggregated statistics and a Chart.js chart, event filter by review status,
-  fault library search and component filter, CSV export.
+- **JSON API:** `GET /api/units/<id>/events/`, `GET /api/summary/`, `POST /api/assistant/`,
+  `GET /api/work-orders/`; public `GET /healthz/` uptime check.
+- **Data features:** dashboard with aggregated statistics, fleet energy-cost total and a Chart.js chart, event
+  filter by review status, work-order filter by status with overdue flags and mean time to repair, AI quality
+  aggregates, fault library search and component filter, CSV export.
 - **Database-backed workflow:** upload form → view → detection → `Analysis` and `FaultEvent` rows → analysis
   page and dashboard.
 
@@ -81,6 +89,9 @@ Implemented and working (prototype stage complete). Summary below; full detail i
   the database, writes `Analysis`, `FaultEvent` and `AssistantQuery` rows.
 - **Reliability:** input validation, graceful failure (stored failed analyses with safe messages), automatic
   TF-IDF fallback, confidence gate, rate limit, human review.
+- **Feedback loop (final):** technicians rate each assistant answer (Yes/No) and confirm or reject each detected
+  fault; closing a work order confirms its fault with the repair notes. These feed the live AI quality page, and
+  confirmed notes become retrieval data, so the assistant improves with use.
 
 ## Part 4: Evaluation, testing and improvement
 
@@ -111,7 +122,14 @@ Assistant accuracy on 10 labelled descriptions (warm model):
 | bge embeddings | 8/10 | 10/10 | 60 ms |
 | Hybrid (default) | 9/10 | 10/10 | 59 ms |
 
-Django test suite: 10 tests pass (`python manage.py test diagnostics`).
+Django test suite: 15 tests pass (`python manage.py test diagnostics`), covering upload and detection, invalid
+input, permissions (404 for other users on units, work orders and feedback), review and work-order validation,
+closing a work order confirming its fault, the energy arithmetic, assistant feedback, the API and the health check.
+
+**Live evaluation (final).** The AI quality page (`/quality/`) reports, per account: detector precision from
+technician decisions (confirmed ÷ reviewed, per fault type), assistant answers rated right, share of answers above
+the confidence gate, and mean latency. The sample portfolio includes one confirmed repair and one rejected false
+alarm, so the page shows real, imperfect numbers from the start.
 
 ### 4.3 Failure analysis
 
@@ -207,7 +225,7 @@ Assumptions: 20% upload one 3-week CSV per day (2,000 analyses), each user asks 
 | API key protection | No AI API keys used (local models); none in the repository; `.env` is git-ignored |
 | Error handling | Detection errors stored with safe messages; unexpected errors logged; AI fallback to TF-IDF |
 | Rate limiting | Assistant limited to 30 queries per user per hour (page and API, HTTP 429) |
-| Logging and monitoring | Console logs for every analysis and AI fallback; host logs on Render |
+| Logging and monitoring | Console logs for every analysis and AI fallback; host logs on Render; public `/healthz/` check (app and database) for an uptime monitor |
 | Privacy | Data stays on the server; secure cookies and HTTPS proxy settings in production |
 | AI-related risks | Confidence gate, scores shown, "supports, not replaces" notice, human confirm/reject before results become training data |
 
@@ -220,9 +238,14 @@ this report, `requirements.txt` files, `.gitignore` (env files, database, upload
 
 | Task | Current status | Responsible member | Expected completion |
 |---|---|---|---|
-| Django core features | Done for the draft: models, auth, CRUD, forms, templates, dashboard, preloaded sample portfolio | Meet Kailash Mali | Polish by Dec 1 |
-| Database and APIs | Done: migrations, seeded library, 3 JSON endpoints, CSV export | Meet Kailash Mali | Nov 28 (PostgreSQL on Render) |
-| AI integration | Working: detection and hybrid assistant in the app | Meet Kailash Mali | Dec 3 (cached embeddings, richer library phrasing) |
-| Evaluation and testing | 5 tests, 2 labelled benchmarks, 9 unit tests, 1 improvement | Meet Kailash Mali | Dec 5 (larger labelled set, more failure cases) |
-| Deployment | Done: live on Render (TF-IDF mode, PostgreSQL) | Meet Kailash Mali | Done; monitor until Dec 8 |
-| Documentation | README, README_AI and this report drafted | Meet Kailash Mali | Dec 7 |
+| Django core features | Done: models, auth, CRUD, forms, templates, dashboard, preloaded sample portfolio, work orders | Meet Kailash Mali | Done |
+| Database and APIs | Done: 4 migrations, seeded library, 4 JSON endpoints, health check, CSV export, PostgreSQL on Render | Meet Kailash Mali | Done |
+| AI integration | Done: detection, hybrid assistant, feedback loop, live AI quality page | Meet Kailash Mali | Done |
+| Evaluation and testing | Done: 5 tests, 2 labelled benchmarks, 15 automated tests, 1 measured improvement, live metrics | Meet Kailash Mali | Done |
+| Deployment | Done: live on Render (TF-IDF mode, PostgreSQL) | Meet Kailash Mali | Done |
+| Documentation | Done: README, README_AI, this report, video script | Meet Kailash Mali | Done |
+
+**Final status.** Works: the full detect → diagnose → review → repair loop, live on Render. Limitations: synthetic
+data only, rule thresholds not tuned per site, energy costs are estimates, the free host sleeps and runs the
+lighter TF-IDF assistant. Next priority: a pilot with real BAS exports from one building to tune thresholds and
+grow the labelled set, then background analysis jobs.
