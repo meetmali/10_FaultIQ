@@ -17,7 +17,7 @@
   <td><span class="badge w-{{ o.status }}">{{ o.get_status_display }}</span></td>
   <td>{{ o.assignee|default:"-" }}</td>
   <td>{% if o.due_date %}<span class="{% if o.status != 'done' and o.due_date < today %}overdue{% endif %}">{{ o.due_date|date:"M j" }}</span>{% else %}-{% endif %}</td>
-  <td class="cost">{% if o.est.comfort %}Comfort risk{% else %}${{ o.est.monthly_cost|intcomma }}/mo{% endif %}</td>
+  <td class="cost">{% if o.status == "done" %}Fixed{% elif o.est.comfort %}Comfort risk{% else %}${{ o.est.monthly_cost|intcomma }}/mo{% endif %}</td>
 </tr>{% empty %}<tr><td colspan="7" class="empty">No work orders yet. Open a fault event and click <b>Create work order</b>.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endblock %}
